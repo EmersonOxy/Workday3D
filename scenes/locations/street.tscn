@@ -1,0 +1,340 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/world/interaction_zone.gd" id="1_zone"]
+
+[sub_resource type="BoxMesh" id="MESH0"]
+size = Vector3(18, 0.24, 18)
+
+[sub_resource type="BoxShape3D" id="SHAPE1"]
+size = Vector3(18, 0.24, 18)
+
+[sub_resource type="StandardMaterial3D" id="MAT2"]
+albedo_color = Color("#414750")
+roughness = 0.86
+
+[sub_resource type="BoxMesh" id="MESH3"]
+size = Vector3(7, 0.16, 3.8)
+
+[sub_resource type="BoxShape3D" id="SHAPE4"]
+size = Vector3(7, 0.16, 3.8)
+
+[sub_resource type="StandardMaterial3D" id="MAT5"]
+albedo_color = Color("#aab0ac")
+roughness = 0.86
+
+[sub_resource type="BoxMesh" id="MESH6"]
+size = Vector3(7, 0.16, 3.8)
+
+[sub_resource type="BoxShape3D" id="SHAPE7"]
+size = Vector3(7, 0.16, 3.8)
+
+[sub_resource type="BoxMesh" id="MESH8"]
+size = Vector3(1.2, 0.025, 0.22)
+
+[sub_resource type="StandardMaterial3D" id="MAT10"]
+albedo_color = Color("#f1ece1")
+roughness = 0.86
+
+[sub_resource type="BoxMesh" id="MESH11"]
+size = Vector3(1.2, 0.025, 0.22)
+
+[sub_resource type="BoxMesh" id="MESH13"]
+size = Vector3(1.2, 0.025, 0.22)
+
+[sub_resource type="BoxMesh" id="MESH15"]
+size = Vector3(5.8, 3.1, 1)
+
+[sub_resource type="BoxShape3D" id="SHAPE16"]
+size = Vector3(5.8, 3.1, 1)
+
+[sub_resource type="StandardMaterial3D" id="MAT17"]
+albedo_color = Color("#ccb69b")
+roughness = 0.86
+
+[sub_resource type="BoxMesh" id="MESH18"]
+size = Vector3(3.6, 0.65, 0.15)
+
+[sub_resource type="StandardMaterial3D" id="MAT20"]
+albedo_color = Color("#6ca88d")
+roughness = 0.86
+
+[sub_resource type="BoxMesh" id="MESH21"]
+size = Vector3(1.35, 2.18, 0.13)
+
+[sub_resource type="StandardMaterial3D" id="MAT23"]
+albedo_color = Color("#538a89")
+roughness = 0.86
+
+[sub_resource type="BoxMesh" id="MESH24"]
+size = Vector3(3.5, 0.16, 2.4)
+
+[sub_resource type="BoxShape3D" id="SHAPE25"]
+size = Vector3(3.5, 0.16, 2.4)
+
+[sub_resource type="StandardMaterial3D" id="MAT26"]
+albedo_color = Color("#b65f56")
+roughness = 0.86
+
+[sub_resource type="BoxMesh" id="MESH27"]
+size = Vector3(0.12, 2.6, 0.12)
+
+[sub_resource type="BoxShape3D" id="SHAPE28"]
+size = Vector3(0.12, 2.6, 0.12)
+
+[sub_resource type="StandardMaterial3D" id="MAT29"]
+albedo_color = Color("#61768b")
+roughness = 0.86
+
+[sub_resource type="BoxMesh" id="MESH30"]
+size = Vector3(0.12, 2.6, 0.12)
+
+[sub_resource type="BoxShape3D" id="SHAPE31"]
+size = Vector3(0.12, 2.6, 0.12)
+
+[sub_resource type="BoxMesh" id="MESH32"]
+size = Vector3(2.7, 0.2, 0.6)
+
+[sub_resource type="BoxShape3D" id="SHAPE33"]
+size = Vector3(2.7, 0.2, 0.6)
+
+[sub_resource type="StandardMaterial3D" id="MAT34"]
+albedo_color = Color("#94745c")
+roughness = 0.86
+
+[sub_resource type="BoxMesh" id="MESH35"]
+size = Vector3(0.15, 0.55, 0.3)
+
+[sub_resource type="BoxShape3D" id="SHAPE36"]
+size = Vector3(0.15, 0.55, 0.3)
+
+[sub_resource type="StandardMaterial3D" id="MAT37"]
+albedo_color = Color("#635348")
+roughness = 0.86
+
+[sub_resource type="BoxMesh" id="MESH38"]
+size = Vector3(0.15, 0.55, 0.3)
+
+[sub_resource type="BoxShape3D" id="SHAPE39"]
+size = Vector3(0.15, 0.55, 0.3)
+
+[sub_resource type="BoxMesh" id="MESH40"]
+size = Vector3(2.7, 2.7, 0.22)
+
+[sub_resource type="StandardMaterial3D" id="MAT42"]
+albedo_color = Color("#617086")
+roughness = 0.86
+
+[sub_resource type="SphereShape3D" id="TRIGGER43"]
+radius = 1.35
+
+[sub_resource type="SphereShape3D" id="TRIGGER44"]
+radius = 1.35
+
+[sub_resource type="SphereShape3D" id="TRIGGER45"]
+radius = 1.35
+
+[node name="RuaComercial" type="Node3D"]
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+rotation_degrees = Vector3(-64, 35, 0)
+light_energy = 0.82
+
+[node name="Asfalto" type="StaticBody3D" parent="."]
+position = Vector3(0, -0.12, 0)
+collision_layer = 1
+
+[node name="Visual" type="MeshInstance3D" parent="Asfalto"]
+mesh = SubResource("MESH0")
+material_override = SubResource("MAT2")
+
+[node name="Collision" type="CollisionShape3D" parent="Asfalto"]
+shape = SubResource("SHAPE1")
+
+[node name="CalcadaEsquerda" type="StaticBody3D" parent="."]
+position = Vector3(-5, -0.03, -6.7)
+collision_layer = 1
+
+[node name="Visual" type="MeshInstance3D" parent="CalcadaEsquerda"]
+mesh = SubResource("MESH3")
+material_override = SubResource("MAT5")
+
+[node name="Collision" type="CollisionShape3D" parent="CalcadaEsquerda"]
+shape = SubResource("SHAPE4")
+
+[node name="CalcadaDireita" type="StaticBody3D" parent="."]
+position = Vector3(4, -0.03, -6.7)
+collision_layer = 1
+
+[node name="Visual" type="MeshInstance3D" parent="CalcadaDireita"]
+mesh = SubResource("MESH6")
+material_override = SubResource("MAT5")
+
+[node name="Collision" type="CollisionShape3D" parent="CalcadaDireita"]
+shape = SubResource("SHAPE7")
+
+[node name="FaixaPedestre1" type="Node3D" parent="."]
+position = Vector3(-0.8, 0.015, 0.2)
+
+[node name="Visual" type="MeshInstance3D" parent="FaixaPedestre1"]
+mesh = SubResource("MESH8")
+material_override = SubResource("MAT10")
+
+[node name="FaixaPedestre2" type="Node3D" parent="."]
+position = Vector3(-0.8, 0.015, 1.2)
+
+[node name="Visual" type="MeshInstance3D" parent="FaixaPedestre2"]
+mesh = SubResource("MESH11")
+material_override = SubResource("MAT10")
+
+[node name="FaixaPedestre3" type="Node3D" parent="."]
+position = Vector3(-0.8, 0.015, 2.2)
+
+[node name="Visual" type="MeshInstance3D" parent="FaixaPedestre3"]
+mesh = SubResource("MESH13")
+material_override = SubResource("MAT10")
+
+[node name="MercadoFachada" type="StaticBody3D" parent="."]
+position = Vector3(-4, 1.55, -8.55)
+collision_layer = 1
+
+[node name="Visual" type="MeshInstance3D" parent="MercadoFachada"]
+mesh = SubResource("MESH15")
+material_override = SubResource("MAT17")
+
+[node name="Collision" type="CollisionShape3D" parent="MercadoFachada"]
+shape = SubResource("SHAPE16")
+
+[node name="MercadoPlaca" type="Node3D" parent="."]
+position = Vector3(-4, 2.5, -7.95)
+
+[node name="Visual" type="MeshInstance3D" parent="MercadoPlaca"]
+mesh = SubResource("MESH18")
+material_override = SubResource("MAT20")
+
+[node name="PortaMercado" type="Node3D" parent="."]
+position = Vector3(-4, 1.12, -7.97)
+
+[node name="Visual" type="MeshInstance3D" parent="PortaMercado"]
+mesh = SubResource("MESH21")
+material_override = SubResource("MAT23")
+
+[node name="Marquise" type="StaticBody3D" parent="."]
+position = Vector3(4, 2.5, -6.8)
+collision_layer = 1
+
+[node name="Visual" type="MeshInstance3D" parent="Marquise"]
+mesh = SubResource("MESH24")
+material_override = SubResource("MAT26")
+
+[node name="Collision" type="CollisionShape3D" parent="Marquise"]
+shape = SubResource("SHAPE25")
+
+[node name="ParadaColunaA" type="StaticBody3D" parent="."]
+position = Vector3(2.5, 1.3, -6.8)
+collision_layer = 1
+
+[node name="Visual" type="MeshInstance3D" parent="ParadaColunaA"]
+mesh = SubResource("MESH27")
+material_override = SubResource("MAT29")
+
+[node name="Collision" type="CollisionShape3D" parent="ParadaColunaA"]
+shape = SubResource("SHAPE28")
+
+[node name="ParadaColunaB" type="StaticBody3D" parent="."]
+position = Vector3(5.5, 1.3, -6.8)
+collision_layer = 1
+
+[node name="Visual" type="MeshInstance3D" parent="ParadaColunaB"]
+mesh = SubResource("MESH30")
+material_override = SubResource("MAT29")
+
+[node name="Collision" type="CollisionShape3D" parent="ParadaColunaB"]
+shape = SubResource("SHAPE31")
+
+[node name="BancoParada" type="StaticBody3D" parent="."]
+position = Vector3(4, 0.65, -6.8)
+collision_layer = 1
+
+[node name="Visual" type="MeshInstance3D" parent="BancoParada"]
+mesh = SubResource("MESH32")
+material_override = SubResource("MAT34")
+
+[node name="Collision" type="CollisionShape3D" parent="BancoParada"]
+shape = SubResource("SHAPE33")
+
+[node name="BancoPernasA" type="StaticBody3D" parent="."]
+position = Vector3(3, 0.28, -6.8)
+collision_layer = 1
+
+[node name="Visual" type="MeshInstance3D" parent="BancoPernasA"]
+mesh = SubResource("MESH35")
+material_override = SubResource("MAT37")
+
+[node name="Collision" type="CollisionShape3D" parent="BancoPernasA"]
+shape = SubResource("SHAPE36")
+
+[node name="BancoPernasB" type="StaticBody3D" parent="."]
+position = Vector3(5, 0.28, -6.8)
+collision_layer = 1
+
+[node name="Visual" type="MeshInstance3D" parent="BancoPernasB"]
+mesh = SubResource("MESH38")
+material_override = SubResource("MAT37")
+
+[node name="Collision" type="CollisionShape3D" parent="BancoPernasB"]
+shape = SubResource("SHAPE39")
+
+[node name="PorticoTrabalho" type="Node3D" parent="."]
+position = Vector3(0, 1.35, 8.4)
+
+[node name="Visual" type="MeshInstance3D" parent="PorticoTrabalho"]
+mesh = SubResource("MESH40")
+material_override = SubResource("MAT42")
+
+[node name="EntrarMercado" type="Area3D" parent="."]
+position = Vector3(-4, 1, -6.4)
+collision_layer = 0
+collision_mask = 2
+script = ExtResource("1_zone")
+action_id = &"street_market"
+prompt = "Entrar no mercado"
+door_path = NodePath("../PortaMercado")
+
+[node name="ZoneShape" type="CollisionShape3D" parent="EntrarMercado"]
+shape = SubResource("TRIGGER43")
+
+[node name="PegarOnibus" type="Area3D" parent="."]
+position = Vector3(4, 1, -5.4)
+collision_layer = 0
+collision_mask = 2
+script = ExtResource("1_zone")
+action_id = &"street_bus"
+prompt = "Pegar ônibus para casa"
+
+[node name="ZoneShape" type="CollisionShape3D" parent="PegarOnibus"]
+shape = SubResource("TRIGGER44")
+
+[node name="VoltarTrabalho" type="Area3D" parent="."]
+position = Vector3(0, 1, 7)
+collision_layer = 0
+collision_mask = 2
+script = ExtResource("1_zone")
+action_id = &"street_office"
+prompt = "Voltar ao escritório"
+
+[node name="ZoneShape" type="CollisionShape3D" parent="VoltarTrabalho"]
+shape = SubResource("TRIGGER45")
+
+[node name="Spawns" type="Node3D" parent="."]
+
+[node name="FromOffice" type="Marker3D" parent="Spawns"]
+position = Vector3(0, 0, 5.3)
+rotation_degrees = Vector3(0, 0, 0)
+
+[node name="FromMarket" type="Marker3D" parent="Spawns"]
+position = Vector3(-4, 0, -4.6)
+rotation_degrees = Vector3(0, 180, 0)
+
+[node name="FromHome" type="Marker3D" parent="Spawns"]
+position = Vector3(4, 0, -3.9)
+rotation_degrees = Vector3(0, 180, 0)

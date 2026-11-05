@@ -18,6 +18,7 @@ const WORKER_SKIN := preload("res://assets/materials/worker_skin.tres")
 			_apply_seated_pose()
 
 @onready var player: CharacterBody3D = $Character
+@onready var travel: Node = $WorldTravel
 @onready var camera_pivot: Node3D = $CameraPivot
 @onready var camera: Camera3D = $CameraPivot/FirstPersonCamera
 @onready var monitor_area: Area3D = $MonitorArea
@@ -64,6 +65,7 @@ func _ready() -> void:
 	pitch = camera_pivot.rotation.x
 	_build_desktop()
 	player.configure(self)
+	travel.configure(self, player)
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 func _physics_process(_delta: float) -> void:
@@ -330,7 +332,7 @@ func _build_desktop() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if Engine.is_editor_hint() or is_transitioning:
+	if Engine.is_editor_hint() or is_transitioning or (travel != null and travel.changing):
 		return
 	if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
 		if is_zoomed:
@@ -348,7 +350,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 		return
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_E:
-		player.interact()
+		if not travel.try_interact():
+			player.interact()
 		get_viewport().set_input_as_handled()
 		return
 	if player.mode not in [player.Mode.SEATED, player.Mode.FREE]: return
