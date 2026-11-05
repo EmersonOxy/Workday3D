@@ -3,7 +3,6 @@ extends Node3D
 
 const SCREEN_SIZE := Vector2(0.86, 0.48)
 const VIEWPORT_SIZE := Vector2i(1280, 720)
-const DESKTOP_LAYOUT_SIZE := Vector2(640, 360)
 const DESKTOP_SCREEN_FILL := 0.94
 const WORKER_SKIN := preload("res://assets/materials/worker_skin.tres")
 @export_range(10.0, 85.0, 1.0) var horizontal_look_limit_degrees := 65.0
@@ -25,8 +24,10 @@ const WORKER_SKIN := preload("res://assets/materials/worker_skin.tres")
 @onready var pc_setup: Node3D = $PCSetup
 @onready var worker_root: Node3D = $Character/OfficeWorker
 
-var desktop_viewport: SubViewport
-var desktop_status: Label
+@onready var desktop_viewport: SubViewport = $DesktopSubViewport
+@onready var desktop: Control = $DesktopSubViewport/WorkOSDesktop
+var desktop_buttons := 0
+var last_desktop_mouse := Vector2.ZERO
 var pre_zoom_camera_transform := Transform3D.IDENTITY
 var initial_yaw := 0.0
 var is_transitioning := false
@@ -163,60 +164,7 @@ func _set_bone_rotation(skeleton: Skeleton3D, bone_name: String, angle_degrees: 
 		skeleton.set_bone_pose_rotation(bone_index, rest_rotation * hinge_rotation)
 
 func _build_desktop() -> void:
-	desktop_viewport = SubViewport.new()
-	desktop_viewport.name = "DesktopSubViewport"
-	desktop_viewport.size = VIEWPORT_SIZE
-	desktop_viewport.canvas_transform = Transform2D.IDENTITY.scaled(Vector2(VIEWPORT_SIZE) / DESKTOP_LAYOUT_SIZE)
-	desktop_viewport.transparent_bg = false
-	desktop_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
-	add_child(desktop_viewport)
-
-	var panel := Control.new()
-	panel.size = DESKTOP_LAYOUT_SIZE
-	desktop_viewport.add_child(panel)
-	var background := ColorRect.new()
-	background.color = Color("101a2a")
-	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	panel.add_child(background)
-
-	var header := Label.new()
-	header.text = "WORKDAY  /  DESKTOP"
-	header.position = Vector2(34, 24)
-	header.add_theme_font_size_override("font_size", 24)
-	header.add_theme_color_override("font_color", Color("e4edf9"))
-	panel.add_child(header)
-
-	var subtitle := Label.new()
-	subtitle.text = "Tudo pronto para começar."
-	subtitle.position = Vector2(36, 62)
-	subtitle.add_theme_color_override("font_color", Color("a8bad2"))
-	panel.add_child(subtitle)
-
-	var shortcuts := HBoxContainer.new()
-	shortcuts.position = Vector2(34, 118)
-	shortcuts.size = Vector2(572, 100)
-	shortcuts.add_theme_constant_override("separation", 18)
-	panel.add_child(shortcuts)
-	for label in ["Agenda", "Projetos", "Notas"]:
-		var button := Button.new()
-		button.text = label
-		button.custom_minimum_size = Vector2(178, 84)
-		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		button.add_theme_font_size_override("font_size", 19)
-		button.pressed.connect(_on_shortcut_pressed.bind(label))
-		shortcuts.add_child(button)
-
-	desktop_status = Label.new()
-	desktop_status.text = "Clique em um atalho"
-	desktop_status.position = Vector2(36, 244)
-	desktop_status.add_theme_color_override("font_color", Color("9aafc9"))
-	panel.add_child(desktop_status)
-
-	var hint := Label.new()
-	hint.text = "Esc ou botão direito: voltar à posição inicial"
-	hint.position = Vector2(36, 324)
-	hint.add_theme_color_override("font_color", Color("8b9cb4"))
-	panel.add_child(hint)
+	desktop.exit_requested.connect(func() -> void: _set_zoomed(false))
 
 	var screen_material := StandardMaterial3D.new()
 	screen_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
@@ -239,60 +187,59 @@ func _build_desktop() -> void:
 	crosshair.add_theme_color_override("font_color", Color.WHITE)
 	hud.add_child(crosshair)
 
-func _on_shortcut_pressed(label: String) -> void:
-	if desktop_status != null:
-		desktop_status.text = "%s selecionado" % label
-
 func _unhandled_input(event: InputEvent) -> void:
-	if Engine.is_editor_hint():
-		return
-	if is_transitioning:
+	if Engine.is_editor_hint() or is_transitioning:
 		return
 	if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
 		if is_zoomed:
-			_set_zoomed(false)
+			if not desktop.dismiss_menu(): _set_zoomed(false)
 		else:
 			Input.mouse_mode = Input.MOUSE_MODE_VISIBLE if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED else Input.MOUSE_MODE_CAPTURED
 		get_viewport().set_input_as_handled()
 		return
-
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_RIGHT and is_zoomed:
-		_set_zoomed(false)
-		get_viewport().set_input_as_handled()
+	if is_zoomed:
+		if event is InputEventKey:
+			desktop_viewport.push_input(event.duplicate(), true)
+			get_viewport().set_input_as_handled()
+		elif event is InputEventMouse:
+			_forward_desktop_input(event)
+			get_viewport().set_input_as_handled()
 		return
-
-	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED and not is_zoomed:
+	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		_apply_mouse_look(event.relative)
-		return
-	if event is InputEventMouseMotion and is_zoomed:
-		var hover_hit := _raycast_from_mouse(event.position)
-		if not hover_hit.is_empty() and hover_hit.get("collider") == monitor_area:
-			if not desktop_pointer_over_screen:
-				desktop_viewport.notify_mouse_entered()
-				desktop_pointer_over_screen = true
-			_forward_mouse_motion(hover_hit.position)
-		elif desktop_pointer_over_screen:
-			desktop_viewport.notify_mouse_exited()
-			desktop_pointer_over_screen = false
-		return
-
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		if Input.mouse_mode == Input.MOUSE_MODE_VISIBLE and not is_zoomed:
+	elif event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		if Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
 			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 			return
 		var hit := _raycast_from_mouse(event.position)
-		if hit.is_empty():
-			if is_zoomed:
-				_set_zoomed(false)
-			elif Input.mouse_mode == Input.MOUSE_MODE_VISIBLE:
-				Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
-			return
 		if hit.get("collider") == monitor_area:
-			if is_zoomed:
-				_forward_click_to_desktop(hit.position)
-			else:
-				_set_zoomed(true)
+			_set_zoomed(true)
 			get_viewport().set_input_as_handled()
+
+func _forward_desktop_input(event: InputEventMouse) -> void:
+	var normal := monitor_screen.global_transform.basis.z.normalized()
+	var plane := Plane(normal, monitor_screen.global_position)
+	var hit: Variant = plane.intersects_ray(camera.project_ray_origin(event.position), camera.project_ray_normal(event.position))
+	if hit == null: return
+	var pixel := _screen_to_viewport(hit)
+	var inside := Rect2(Vector2.ZERO, Vector2(VIEWPORT_SIZE)).has_point(pixel)
+	if inside != desktop_pointer_over_screen:
+		desktop_pointer_over_screen = inside
+		if inside: desktop_viewport.notify_mouse_entered()
+		else: desktop_viewport.notify_mouse_exited()
+	if not inside and desktop_buttons == 0: return
+	var mapped := event.duplicate() as InputEventMouse
+	mapped.position = pixel
+	mapped.global_position = pixel
+	if mapped is InputEventMouseButton:
+		if mapped.button_index == MOUSE_BUTTON_LEFT:
+			desktop_buttons = MOUSE_BUTTON_MASK_LEFT if mapped.pressed else 0
+		mapped.button_mask = desktop_buttons
+	elif mapped is InputEventMouseMotion:
+		mapped.relative = pixel - last_desktop_mouse
+		mapped.button_mask = desktop_buttons
+	last_desktop_mouse = pixel
+	desktop_viewport.push_input(mapped, true)
 
 func _apply_mouse_look(relative: Vector2) -> void:
 	var limit := deg_to_rad(horizontal_look_limit_degrees)
@@ -308,29 +255,6 @@ func _raycast_from_mouse(mouse_position: Vector2) -> Dictionary:
 	query.collide_with_areas = true
 	query.collide_with_bodies = true
 	return get_world_3d().direct_space_state.intersect_ray(query)
-
-func _forward_click_to_desktop(world_position: Vector3) -> void:
-	if desktop_viewport == null:
-		return
-	var ui_position := _screen_to_viewport(world_position)
-	var press := InputEventMouseButton.new()
-	press.button_index = MOUSE_BUTTON_LEFT
-	press.position = ui_position
-	press.global_position = ui_position
-	press.pressed = true
-	desktop_viewport.push_input(press, true)
-	var release := InputEventMouseButton.new()
-	release.button_index = MOUSE_BUTTON_LEFT
-	release.position = ui_position
-	release.global_position = ui_position
-	release.pressed = false
-	desktop_viewport.push_input(release, true)
-
-func _forward_mouse_motion(world_position: Vector3) -> void:
-	var motion := InputEventMouseMotion.new()
-	motion.position = _screen_to_viewport(world_position)
-	motion.global_position = motion.position
-	desktop_viewport.push_input(motion, true)
 
 func _screen_to_viewport(world_position: Vector3) -> Vector2:
 	# The hit box is in front of the display; intersect the display plane
@@ -358,6 +282,16 @@ func _set_zoomed(enabled: bool) -> void:
 	if is_zoomed == enabled:
 		return
 	is_zoomed = enabled
+	desktop.set_monitor_focus(enabled)
+	if not enabled:
+		if desktop_buttons != 0:
+			var release := InputEventMouseButton.new()
+			release.button_index = MOUSE_BUTTON_LEFT
+			release.position = last_desktop_mouse
+			release.global_position = last_desktop_mouse
+			desktop_viewport.push_input(release, true)
+		desktop.suspend_input()
+		desktop_buttons = 0
 	if zoom_tween != null and zoom_tween.is_running():
 		zoom_tween.kill()
 	var target_transform: Transform3D

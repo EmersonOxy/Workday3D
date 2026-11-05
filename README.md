@@ -6,7 +6,10 @@ Projeto Godot 4 com GDScript e renderizador Compatibility. Abra `project.godot` 
 
 - Mouse: olhar ao redor, limitado a 65° para cada lado e com rotação vertical limitada.
 - Aponte para o monitor e clique: aproximar.
-- Na tela aproximada, clique em Agenda, Projetos ou Notas. O botão direito ou Esc retorna à posição inicial.
+- Na tela aproximada, use os ícones ou o menu Iniciar do WorkOS. Arraste janelas pela barra de título; use os botões para minimizar, maximizar e fechar.
+- Digite nas Notas ou use a Calculadora. Configurações permite escolher entre oito wallpapers originais.
+- Iniciar → Música: quatro faixas originais, seleção da playlist, volume e próxima faixa. A reprodução continua com a janela fechada; as preferências são salvas.
+- Esc fecha o menu Iniciar aberto; caso contrário, retorna à cadeira. O botão Voltar na barra de tarefas também retorna.
 - Esc fora da aproximação: alternar a captura do mouse.
 
 A interface do monitor é renderizada em um `SubViewport` e aplicada à malha 3D da tela. O personagem usa uma pose sentada estática no esqueleto; não há animações no asset original.
@@ -15,6 +18,6 @@ O foco no monitor sempre usa o mesmo enquadramento frontal. A transição interp
 
 A interface é renderizada em 1280×720 e preenche aproximadamente 94% da janela ao focar o monitor. As mãos usam material de pele compatível e ficam com as palmas para baixo.
 
-A análise de como trazer o WorkOS do projeto Workday original está em [Integração do WorkOS](docs/INTEGRACAO_WORKOS.md).
+A área de trabalho nativa está em `scenes/workos_desktop.tscn`, instanciada no `DesktopSubViewport`. Os assets originais usam controles Godot e GDScript. Notas e wallpaper são salvos em `user://workos.cfg`. O escopo e a origem dos recursos estão em [Integração do WorkOS](docs/INTEGRACAO_WORKOS.md).
 
 Os GLB originais da raiz foram preservados. A cena usa cópias em `assets/models/`. Formatos, texturas e problemas encontrados estão descritos em [INSPECAO_MODELOS.md](INSPECAO_MODELOS.md).

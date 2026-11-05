@@ -7,6 +7,12 @@
 [ext_resource type="PackedScene" uid="uid://b5yaa8bdt0k3f" path="res://assets/models/the_character_of_an_office_worker.glb" id="5_worker"]
 [ext_resource type="Texture2D" uid="uid://bt43qgdl4yadl" path="res://assets/ui/desktop_preview.svg" id="6_preview"]
 
+[ext_resource type="PackedScene" path="res://scenes/workos_desktop.tscn" id="7_workos"]
+
+[sub_resource type="ViewportTexture" id="WorkOSTexture"]
+resource_local_to_scene = true
+viewport_path = NodePath("DesktopSubViewport")
+
 [sub_resource type="Environment" id="RoomEnvironment"]
 background_mode = 1
 background_color = Color(0.09, 0.11, 0.15, 1)
@@ -42,7 +48,7 @@ roughness = 0.32
 [sub_resource type="StandardMaterial3D" id="MonitorScreenMaterial"]
 cull_mode = 2
 shading_mode = 2
-albedo_texture = ExtResource("6_preview")
+albedo_texture = SubResource("WorkOSTexture")
 uv1_scale = Vector3(-1, 1, 1)
 uv1_offset = Vector3(1, 0, 0)
 
@@ -159,3 +165,12 @@ fov = 66.0
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=1259285686]
 transform = Transform3D(1, 0, 0, 0, -0.041425698, 0.99914163, 0, -0.99914163, -0.041425698, 0, 4.134414, -1.4563982)
+
+[node name="DesktopSubViewport" type="SubViewport" parent="."]
+gui_embed_subwindows = true
+size = Vector2i(1280, 720)
+disable_3d = true
+render_target_update_mode = 4
+gui_disable_input = false
+
+[node name="WorkOSDesktop" parent="DesktopSubViewport" instance=ExtResource("7_workos")]

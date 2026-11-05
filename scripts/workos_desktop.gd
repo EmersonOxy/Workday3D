@@ -1,0 +1,252 @@
+extends Control
+
+signal exit_requested
+
+const WINDOW_SCRIPT := preload("res://scripts/workos_window.gd")
+const MUSIC_SCRIPT := preload("res://scripts/workos_music.gd")
+const GAME_SCRIPT := preload("res://scripts/workos/game_state.gd")
+const SOCIAL_SCRIPT := preload("res://scripts/workos/social_state.gd")
+const WORKDAY_SCRIPT := preload("res://scripts/workos/workday_app.gd")
+const APPS := preload("res://scripts/workos/apps.gd")
+const SAVE_PATH := "user://workos.cfg"
+const WALLPAPERS := ["cerejeira-luar", "deserto-por-do-sol", "espaco-terra", "farol-por-do-sol", "lago-primavera", "outono-dourado", "planeta-aneis", "praia-tropical"]
+const TITLES := {"workday": "PORTAL_RH.EXE", "calendar": "CALENDÁRIO", "archive": "ARQUIVO", "messenger": "MSWORKN.EXE", "profile": "PERFIL", "backup": "BACKUP", "notes": "NOTAS.TXT", "calc": "CALCULADORA", "settings": "CONFIGURAÇÕES", "about": "WORKOS", "music": "MÚSICA"}
+var music: Node
+var game: Node
+var social: Node
+var notification: Label
+var windows: Dictionary = {}
+var tasks: Dictionary = {}
+var settings := ConfigFile.new()
+var save_timer: Timer
+var clock_timer: Timer
+var notes_editor: TextEdit
+var current_app := ""
+
+func _ready() -> void:
+	settings.load(SAVE_PATH)
+	game = GAME_SCRIPT.new()
+	add_child(game)
+	social = SOCIAL_SCRIPT.new()
+	add_child(social)
+	social.setup(game)
+	notification = Label.new()
+	notification.position = Vector2(350, 5)
+	notification.size = Vector2(900, 42)
+	notification.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	notification.add_theme_color_override("font_color", Color.WHITE)
+	notification.add_theme_color_override("font_shadow_color", Color.BLACK)
+	add_child(notification)
+	game.notice.connect(func(message: String) -> void: notification.text = message)
+	social.incoming.connect(func(npc: String, message: String) -> void: notification.text = str(game.data.cast[npc].name) + ": " + message)
+	music = MUSIC_SCRIPT.new()
+	add_child(music)
+	music.configure(settings, SAVE_PATH)
+	_set_wallpaper(str(settings.get_value("desktop", "wallpaper", "lago-primavera")), false)
+	for icon in $Icons.get_children():
+		icon.pressed.connect(open_app.bind(str(icon.get_meta("app"))))
+	for button in $StartMenu/Items.get_children():
+		if button is Button:
+			button.pressed.connect(open_app.bind(str(button.get_meta("app"))))
+	$Taskbar/Start.pressed.connect(func() -> void: $StartMenu.visible = not $StartMenu.visible)
+	$Taskbar/Exit.pressed.connect(func() -> void: exit_requested.emit())
+	$Wallpaper.gui_input.connect(func(event: InputEvent) -> void:
+		if event is InputEventMouseButton and event.pressed:
+			$StartMenu.hide())
+	save_timer = Timer.new()
+	save_timer.wait_time = 0.4
+	save_timer.one_shot = true
+	save_timer.timeout.connect(_save_notes)
+	add_child(save_timer)
+	clock_timer = Timer.new()
+	clock_timer.wait_time = 1.0
+	clock_timer.timeout.connect(_update_clock)
+	add_child(clock_timer)
+	clock_timer.start()
+	_update_clock()
+
+func _update_clock() -> void:
+	var now := Time.get_datetime_dict_from_system()
+	$Taskbar/Clock.text = "%02d:%02d  ·  %02d/%02d/%04d" % [now.hour, now.minute, now.day, now.month, now.year]
+
+func open_app(id: String) -> void:
+	if not TITLES.has(id): return
+	if id != "workday" and game.career.get("phase", "") == "day": game.paused = true
+	$StartMenu.hide()
+	if windows.has(id):
+		windows[id].show()
+		_focus(id)
+		return
+	var window := PanelContainer.new()
+	window.set_script(WINDOW_SCRIPT)
+	$Windows.add_child(window)
+	window.configure(TITLES[id])
+	if id == "music": window.size = Vector2(660, 560)
+	if id in ["calendar", "archive", "messenger"]: window.size = Vector2(920, 600)
+	if id == "workday": window.size = Vector2(1220, 640)
+	window.position = Vector2(300, 75) + Vector2(28, 24) * windows.size()
+	window.position = window.position.clamp(Vector2.ZERO, $Windows.size - window.size)
+	windows[id] = window
+	window.activated.connect(_focus.bind(id))
+	window.closed.connect(_close.bind(id))
+	window.minimized.connect(_minimize.bind(id))
+	var task := Button.new()
+	task.text = TITLES[id]
+	task.custom_minimum_size = Vector2(105, 38)
+	task.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	task.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	task.tooltip_text = TITLES[id]
+	task.toggle_mode = true
+	$Taskbar/Tasks.add_child(task)
+	tasks[id] = task
+	task.pressed.connect(func() -> void:
+		if window.visible and current_app == id:
+			window.hide()
+			_minimize(id)
+		else:
+			window.show()
+			_focus(id))
+	match id:
+		"workday":
+			var app := WORKDAY_SCRIPT.new()
+			window.content.add_child(app)
+			app.setup(game, self)
+		"calendar": APPS.calendar(window.content, game)
+		"archive": APPS.archive(window.content, game)
+		"messenger": APPS.messenger(window.content, social)
+		"profile": APPS.profile(window.content, game)
+		"backup": APPS.backup(window.content, game)
+		"notes": _build_notes(window.content)
+		"calc": _build_calculator(window.content)
+		"settings": _build_settings(window.content)
+		"music": music.build_ui(window.content)
+		"about":
+			var label := Label.new()
+			label.text = "WorkOS\n\nÁrea de trabalho do Workday.\n\nNotas • Calculadora • Wallpapers\n\nArraste uma janela pela barra de título.\nUse os botões para minimizar ou maximizar.\n\nEsc / Voltar: retornar à cadeira."
+			window.content.add_child(label)
+	_focus(id)
+
+func _focus(id: String) -> void:
+	if not windows.has(id): return
+	current_app = id
+	$Windows.move_child(windows[id], -1)
+	for key in tasks:
+		tasks[key].set_pressed_no_signal(key == id and windows[key].visible)
+
+func _minimize(id: String) -> void:
+	if id == "workday": game.paused = true
+	tasks[id].set_pressed_no_signal(false)
+	if current_app == id: current_app = ""
+
+func _close(id: String) -> void:
+	if id == "workday":
+		game.paused = true
+		game.save_game()
+	if id == "notes":
+		_save_notes()
+		notes_editor = null
+	windows.erase(id)
+	tasks[id].queue_free()
+	tasks.erase(id)
+	if current_app == id: current_app = ""
+
+func _build_notes(parent: Control) -> void:
+	notes_editor = TextEdit.new()
+	notes_editor.placeholder_text = "Escreva suas notas..."
+	notes_editor.text = str(settings.get_value("notes", "text", ""))
+	notes_editor.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	parent.add_child(notes_editor)
+	notes_editor.text_changed.connect(func() -> void: save_timer.start())
+	var hint := Label.new()
+	hint.text = "Salvamento automático"
+	parent.add_child(hint)
+	notes_editor.grab_focus()
+
+func _save_notes() -> void:
+	if is_instance_valid(notes_editor):
+		settings.set_value("notes", "text", notes_editor.text)
+		settings.save(SAVE_PATH)
+
+func _exit_tree() -> void:
+	_save_notes()
+
+func _build_calculator(parent: Control) -> void:
+	var display := LineEdit.new()
+	display.placeholder_text = "0"
+	display.alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	parent.add_child(display)
+	display.text_submitted.connect(func(_text: String) -> void: _calculate(display))
+	var grid := GridContainer.new()
+	grid.columns = 4
+	grid.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	parent.add_child(grid)
+	for key in ["C", "⌫", "(", ")", "7", "8", "9", "/", "4", "5", "6", "*", "1", "2", "3", "-", "0", ".", "=", "+"]:
+		var button := Button.new()
+		button.text = key
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		button.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		grid.add_child(button)
+		button.pressed.connect(_calculator_key.bind(key, display))
+
+func _calculator_key(key: String, display: LineEdit) -> void:
+	match key:
+		"C": display.text = ""
+		"⌫": display.text = display.text.left(-1)
+		"=": _calculate(display)
+		_: display.text += key
+
+func _calculate(display: LineEdit) -> void:
+	for character in display.text:
+		if not character in "0123456789.+-*/() ":
+			display.text = "Erro"
+			return
+	var expression := Expression.new()
+	if expression.parse(display.text) != OK:
+		display.text = "Erro"
+		return
+	var result: Variant = expression.execute([], null, false)
+	display.text = "Erro" if expression.has_execute_failed() else str(result)
+
+func _build_settings(parent: Control) -> void:
+	var label := Label.new()
+	label.text = "Papel de parede"
+	parent.add_child(label)
+	var options := OptionButton.new()
+	for wall in WALLPAPERS: options.add_item(wall.replace("-", " ").capitalize())
+	options.selected = maxi(0, WALLPAPERS.find(str(settings.get_value("desktop", "wallpaper", "lago-primavera"))))
+	options.item_selected.connect(func(index: int) -> void: _set_wallpaper(WALLPAPERS[index]))
+	parent.add_child(options)
+	var preview := TextureRect.new()
+	preview.texture = $Wallpaper.texture
+	preview.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	preview.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	preview.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	parent.add_child(preview)
+	options.item_selected.connect(func(_index: int) -> void: preview.texture = $Wallpaper.texture)
+
+func _set_wallpaper(id: String, persist := true) -> void:
+	if not id in WALLPAPERS: id = "lago-primavera"
+	$Wallpaper.texture = load("res://assets/ui/workos/wallpapers/%s.png" % id)
+	if persist:
+		settings.set_value("desktop", "wallpaper", id)
+		settings.save(SAVE_PATH)
+
+func dismiss_menu() -> bool:
+	if $StartMenu.visible:
+		$StartMenu.hide()
+		return true
+	if current_app == "workday" and game.career.get("phase", "") == "day" and not game.paused:
+		if game.events.has("boss"): game.dodge_boss()
+		else: game.paused = true
+		return true
+	return false
+
+func set_monitor_focus(value: bool) -> void:
+	game.set_focus(value)
+
+func suspend_input() -> void:
+	game.set_focus(false)
+	_save_notes()
+	$StartMenu.hide()
+	for window in windows.values(): window.dragging = false
+	get_viewport().gui_release_focus()

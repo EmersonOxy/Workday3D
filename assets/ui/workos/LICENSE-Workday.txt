@@ -1,0 +1,14 @@
+Copyright (c) 2026 Émerson K. Boff. Todos os direitos reservados. All rights reserved.
+
+Este software e todos os seus elementos (código, arte em pixel, textos e design)
+são de propriedade exclusiva do autor. Nenhuma licença é concedida.
+
+É proibido copiar, modificar, redistribuir, republicar, sublicenciar, vender ou
+adaptar este jogo, no todo ou em parte, em qualquer plataforma, sem autorização
+prévia e por escrito do autor.
+
+This software and all of its elements (code, pixel art, text and design) are the
+exclusive property of the author. No license is granted. Copying, modifying,
+redistributing, reposting, sublicensing, selling or adapting this game, in whole
+or in part, on any platform, is prohibited without the author's prior written
+permission.

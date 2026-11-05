@@ -1,0 +1,552 @@
+[
+  {
+    "file": "frame-0.png",
+    "rect": [
+      40,
+      757,
+      76,
+      790
+    ],
+    "source": "materials"
+  },
+  {
+    "file": "frame-1.png",
+    "rect": [
+      120,
+      757,
+      210,
+      785
+    ],
+    "source": "materials"
+  },
+  {
+    "file": "frame-2.png",
+    "rect": [
+      260,
+      757,
+      297,
+      790
+    ],
+    "source": "materials"
+  },
+  {
+    "file": "frame-3.png",
+    "rect": [
+      40,
+      835,
+      68,
+      895
+    ],
+    "source": "materials"
+  },
+  {
+    "file": "frame-4.png",
+    "rect": [
+      96,
+      814,
+      238,
+      920
+    ],
+    "source": "materials"
+  },
+  {
+    "file": "frame-5.png",
+    "rect": [
+      268,
+      835,
+      296,
+      895
+    ],
+    "source": "materials"
+  },
+  {
+    "file": "frame-6.png",
+    "rect": [
+      40,
+      945,
+      76,
+      977
+    ],
+    "source": "materials"
+  },
+  {
+    "file": "frame-7.png",
+    "rect": [
+      120,
+      949,
+      210,
+      975
+    ],
+    "source": "materials"
+  },
+  {
+    "file": "frame-8.png",
+    "rect": [
+      260,
+      945,
+      297,
+      977
+    ],
+    "source": "materials"
+  },
+  {
+    "file": "panel-0.png",
+    "rect": [
+      575,
+      763,
+      606,
+      791
+    ],
+    "source": "materials"
+  },
+  {
+    "file": "panel-1.png",
+    "rect": [
+      645,
+      763,
+      710,
+      787
+    ],
+    "source": "materials"
+  },
+  {
+    "file": "panel-2.png",
+    "rect": [
+      751,
+      763,
+      783,
+      792
+    ],
+    "source": "materials"
+  },
+  {
+    "file": "panel-3.png",
+    "rect": [
+      575,
+      835,
+      599,
+      895
+    ],
+    "source": "materials"
+  },
+  {
+    "file": "panel-4.png",
+    "rect": [
+      626,
+      815,
+      731,
+      912
+    ],
+    "source": "materials"
+  },
+  {
+    "file": "panel-5.png",
+    "rect": [
+      758,
+      835,
+      783,
+      895
+    ],
+    "source": "materials"
+  },
+  {
+    "file": "panel-6.png",
+    "rect": [
+      575,
+      935,
+      606,
+      962
+    ],
+    "source": "materials"
+  },
+  {
+    "file": "panel-7.png",
+    "rect": [
+      645,
+      940,
+      710,
+      961
+    ],
+    "source": "materials"
+  },
+  {
+    "file": "panel-8.png",
+    "rect": [
+      751,
+      935,
+      783,
+      962
+    ],
+    "source": "materials"
+  },
+  {
+    "file": "titlebar-active.png",
+    "rect": [
+      200,
+      136,
+      220,
+      175
+    ],
+    "source": "materials"
+  },
+  {
+    "file": "titlebar-inactive.png",
+    "rect": [
+      200,
+      255,
+      220,
+      292
+    ],
+    "source": "materials"
+  },
+  {
+    "file": "control-min.png",
+    "rect": [
+      508,
+      149,
+      549,
+      190
+    ],
+    "source": "materials"
+  },
+  {
+    "file": "control-max.png",
+    "rect": [
+      564,
+      149,
+      605,
+      190
+    ],
+    "source": "materials"
+  },
+  {
+    "file": "control-close.png",
+    "rect": [
+      620,
+      149,
+      661,
+      190
+    ],
+    "source": "materials"
+  },
+  {
+    "file": "control-min-inactive.png",
+    "rect": [
+      692,
+      149,
+      733,
+      190
+    ],
+    "source": "materials"
+  },
+  {
+    "file": "control-max-inactive.png",
+    "rect": [
+      748,
+      149,
+      789,
+      190
+    ],
+    "source": "materials"
+  },
+  {
+    "file": "control-close-inactive.png",
+    "rect": [
+      804,
+      149,
+      845,
+      190
+    ],
+    "source": "materials"
+  },
+  {
+    "file": "input.png",
+    "rect": [
+      515,
+      378,
+      699,
+      414
+    ],
+    "source": "materials"
+  },
+  {
+    "file": "progress.png",
+    "rect": [
+      1024,
+      385,
+      1295,
+      414
+    ],
+    "source": "materials"
+  },
+  {
+    "file": "progress-fill.png",
+    "rect": [
+      1335,
+      385,
+      1366,
+      413
+    ],
+    "source": "materials"
+  },
+  {
+    "file": "scroll-up.png",
+    "rect": [
+      947,
+      596,
+      982,
+      627
+    ],
+    "source": "materials"
+  },
+  {
+    "file": "scroll-down.png",
+    "rect": [
+      947,
+      633,
+      982,
+      664
+    ],
+    "source": "materials"
+  },
+  {
+    "file": "scroll-thumb.png",
+    "rect": [
+      1053,
+      595,
+      1075,
+      665
+    ],
+    "source": "materials"
+  },
+  {
+    "file": "scroll-track.png",
+    "rect": [
+      1008,
+      595,
+      1027,
+      665
+    ],
+    "source": "materials"
+  },
+  {
+    "file": "dialog-button.png",
+    "rect": [
+      40,
+      377,
+      187,
+      418
+    ],
+    "source": "materials"
+  },
+  {
+    "file": "taskbar.png",
+    "rect": [
+      665,
+      396,
+      1145,
+      451
+    ],
+    "source": "taskbar"
+  },
+  {
+    "file": "taskbar-inactive.png",
+    "rect": [
+      665,
+      465,
+      1145,
+      521
+    ],
+    "source": "taskbar"
+  },
+  {
+    "file": "task-button.png",
+    "rect": [
+      1210,
+      392,
+      1485,
+      451
+    ],
+    "source": "taskbar"
+  },
+  {
+    "file": "task-button-active.png",
+    "rect": [
+      1210,
+      535,
+      1485,
+      595
+    ],
+    "source": "taskbar"
+  },
+  {
+    "file": "start-button.png",
+    "rect": [
+      388,
+      392,
+      487,
+      452
+    ],
+    "source": "taskbar"
+  },
+  {
+    "file": "icon-folder.png",
+    "rect": [
+      904,
+      128,
+      955,
+      170
+    ],
+    "source": "materials"
+  },
+  {
+    "file": "icon-document.png",
+    "rect": [
+      1009,
+      126,
+      1048,
+      170
+    ],
+    "source": "materials"
+  },
+  {
+    "file": "icon-save.png",
+    "rect": [
+      1097,
+      125,
+      1143,
+      170
+    ],
+    "source": "materials"
+  },
+  {
+    "file": "icon-search.png",
+    "rect": [
+      1181,
+      124,
+      1229,
+      171
+    ],
+    "source": "materials"
+  },
+  {
+    "file": "icon-settings.png",
+    "rect": [
+      1271,
+      126,
+      1318,
+      170
+    ],
+    "source": "materials"
+  },
+  {
+    "file": "icon-monitor.png",
+    "rect": [
+      1360,
+      126,
+      1409,
+      170
+    ],
+    "source": "materials"
+  },
+  {
+    "file": "icon-globe.png",
+    "rect": [
+      1447,
+      124,
+      1496,
+      172
+    ],
+    "source": "materials"
+  },
+  {
+    "file": "icon-mail.png",
+    "rect": [
+      904,
+      221,
+      953,
+      259
+    ],
+    "source": "materials"
+  },
+  {
+    "file": "icon-star.png",
+    "rect": [
+      999,
+      215,
+      1049,
+      262
+    ],
+    "source": "materials"
+  },
+  {
+    "file": "icon-warning.png",
+    "rect": [
+      1083,
+      214,
+      1136,
+      262
+    ],
+    "source": "materials"
+  },
+  {
+    "file": "icon-info.png",
+    "rect": [
+      1180,
+      214,
+      1231,
+      264
+    ],
+    "source": "materials"
+  },
+  {
+    "file": "icon-error.png",
+    "rect": [
+      1275,
+      215,
+      1327,
+      264
+    ],
+    "source": "materials"
+  },
+  {
+    "file": "icon-key.png",
+    "rect": [
+      1372,
+      211,
+      1408,
+      264
+    ],
+    "source": "materials"
+  },
+  {
+    "file": "icon-trash.png",
+    "rect": [
+      1448,
+      212,
+      1497,
+      264
+    ],
+    "source": "materials"
+  },
+  {
+    "file": "tab-active.png",
+    "rect": [
+      1070,
+      758,
+      1186,
+      805
+    ],
+    "source": "materials"
+  },
+  {
+    "file": "tab-inactive.png",
+    "rect": [
+      1185,
+      764,
+      1292,
+      805
+    ],
+    "source": "materials"
+  }
+]

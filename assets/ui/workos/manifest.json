@@ -1,0 +1,157 @@
+{
+  "source": "assets/ui/Sprite Sheet de Interface Retrô WorkOS.png",
+  "source_size": [
+    1536,
+    1024
+  ],
+  "notes": "Moldura externa única envolve cabeçalho e conteúdo. O centro da moldura não é pintado. Barras recebem a cor personalizada com luminosidade da textura original.",
+  "sprites": [
+    {
+      "file": "window-panel.png",
+      "rect": [
+        14,
+        56,
+        490,
+        370
+      ],
+      "size": [
+        476,
+        314
+      ],
+      "use": "Moldura de conteúdo em 9-slice, fatias de 22 px para manter cantos e chanfros completos."
+    },
+    {
+      "file": "titlebar-active.png",
+      "rect": [
+        310,
+        800,
+        330,
+        836
+      ],
+      "size": [
+        20,
+        36
+      ],
+      "use": "Textura central da barra ativa WorkOS, extraída da barra de tarefas e repetida horizontalmente."
+    },
+    {
+      "file": "titlebar-inactive.png",
+      "rect": [
+        310,
+        843,
+        330,
+        879
+      ],
+      "size": [
+        20,
+        36
+      ],
+      "use": "Textura central da barra inativa WorkOS, extraída da barra de tarefas e repetida horizontalmente."
+    },
+    {
+      "file": "control-min.png",
+      "rect": [
+        380,
+        21,
+        410,
+        52
+      ],
+      "size": [
+        31,
+        31
+      ],
+      "use": "controle minimizar ativo."
+    },
+    {
+      "file": "control-max.png",
+      "rect": [
+        413,
+        21,
+        443,
+        52
+      ],
+      "size": [
+        31,
+        31
+      ],
+      "use": "controle maximizar/restaurar ativo."
+    },
+    {
+      "file": "control-close.png",
+      "rect": [
+        447,
+        21,
+        478,
+        52
+      ],
+      "size": [
+        31,
+        31
+      ],
+      "use": "controle fechar ativo."
+    },
+    {
+      "file": "control-min-inactive.png",
+      "rect": [
+        503,
+        842,
+        533,
+        873
+      ],
+      "size": [
+        31,
+        31
+      ],
+      "use": "controle minimizar inativo."
+    },
+    {
+      "file": "control-max-inactive.png",
+      "rect": [
+        536,
+        842,
+        566,
+        873
+      ],
+      "size": [
+        31,
+        31
+      ],
+      "use": "controle maximizar/restaurar inativo."
+    },
+    {
+      "file": "control-close-inactive.png",
+      "rect": [
+        568,
+        842,
+        598,
+        873
+      ],
+      "size": [
+        31,
+        31
+      ],
+      "use": "controle fechar inativo."
+    },
+    {
+      "file": "window-frame.png",
+      "rect": [
+        14,
+        12,
+        490,
+        370
+      ],
+      "use": "Moldura externa; slices superior 9, laterais 10 e inferior 14 px; máscara externa nos cantos."
+    },
+    {
+      "file": "window-paper.png",
+      "rect": [
+        35,
+        75,
+        460,
+        335
+      ],
+      "use": "Textura limpa do conteúdo, sem bordas embutidas."
+    }
+  ],
+  "not_extracted": "As capturas de aplicações completas contêm textos, controles e conteúdo de demonstração misturados. Não foram usadas como fundos. Ícones gerais ainda vêm do atlas de botões aprovado ou dos sprites existentes."
+}
