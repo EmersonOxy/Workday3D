@@ -128,6 +128,29 @@ func interact() -> void:
 		approach_timeout = 0
 		last_support = -1
 
+func teleport_from_travel(destination: Vector3, facing_yaw: float) -> void:
+	# Reaproveita a mesma instância/rig/WorkOS ao mudar o cenário 3D.
+	mode = Mode.FREE
+	global_position = destination
+	global_basis = Basis(Vector3.UP, facing_yaw - PI)
+	movement_velocity = Vector3.ZERO
+	velocity = Vector3.ZERO
+	walk_distance = 0.0
+	bob_strength = 0.0
+	bob_offset = Vector2.ZERO
+	$BodyShape.disabled = false
+	$OfficeWorker.basis = upright_visual_basis
+	if chair_collision != null:
+		remove_collision_exception_with(chair_collision)
+	chair_clearance = false
+	_play("idle")
+	host.camera.clear_mouse_sway()
+	host.camera_pivot.rotation = Vector3(0, facing_yaw, 0)
+	host.camera_pivot.global_position = destination + Vector3.UP * host.camera.altura_em_pe
+	host.initial_yaw = facing_yaw
+	host.yaw = 0.0
+	host.pitch = 0.0
+
 func _near_chair() -> bool:
 	var delta := global_position - _chair_seat().origin
 	delta.y = 0
@@ -449,6 +472,7 @@ func _update_hint() -> void:
 	elif mode == Mode.SEATED:
 		hint.text = "E · Levantar   |   Clique no monitor · Usar PC"
 	elif mode == Mode.FREE:
-		hint.text = "E · Sentar" if _near_chair() else "W A S D · Caminhar"
+		var world_prompt := host.travel.interaction_prompt() if host.get("travel") != null else ""
+		hint.text = world_prompt if not world_prompt.is_empty() else ("E · Sentar" if host.travel.location == "office" and _near_chair() else "W A S D · Caminhar")
 	else:
 		hint.text = ""

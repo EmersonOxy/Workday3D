@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://bv7dnyh0bxqg7"]
 
 [ext_resource type="Script" uid="uid://50npccyfxvrt" path="res://scripts/main.gd" id="1_main"]
+[ext_resource type="Script" path="res://scripts/world/world_travel.gd" id="world_travel"]
 [ext_resource type="PackedScene" uid="uid://cx6ukce427hiy" path="res://assets/models/office_chair.glb" id="2_chair"]
 [ext_resource type="PackedScene" uid="uid://blnp50a8rqure" path="res://assets/models/office_table.glb" id="3_table"]
 [ext_resource type="PackedScene" uid="uid://dsx0nnidpu3dh" path="res://assets/models/pc_setup_-_game_ready.glb" id="4_pc"]
@@ -578,3 +579,6 @@ gizmo_extents = 0.08
 [node name="StandingView" type="Marker3D" parent="ChairCameraTargets" unique_id=1156029856]
 transform = Transform3D(-1, 5.5126606e-08, -3.211443e-07, 0, 0.9855848, 0.16918235, 3.2584137e-07, 0.16918235, -0.9855848, 0.004751, 1.62, -0.5880384)
 gizmo_extents = 0.08
+
+[node name="WorldTravel" type="Node" parent="."]
+script = ExtResource("world_travel")
