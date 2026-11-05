@@ -9,7 +9,7 @@ size = Vector3(10, 0.24, 12)
 size = Vector3(10, 0.24, 12)
 
 [sub_resource type="StandardMaterial3D" id="MAT2"]
-albedo_color = Color("#b49d83")
+albedo_color = Color(0.705882, 0.615686, 0.513725, 1.0)
 roughness = 0.86
 
 [sub_resource type="BoxMesh" id="MESH3"]
@@ -19,7 +19,7 @@ size = Vector3(10, 3.4, 0.2)
 size = Vector3(10, 3.4, 0.2)
 
 [sub_resource type="StandardMaterial3D" id="MAT5"]
-albedo_color = Color("#d5c6b4")
+albedo_color = Color(0.835294, 0.776471, 0.705882, 1.0)
 roughness = 0.86
 
 [sub_resource type="BoxMesh" id="MESH6"]
@@ -29,7 +29,7 @@ size = Vector3(0.2, 3.4, 12)
 size = Vector3(0.2, 3.4, 12)
 
 [sub_resource type="StandardMaterial3D" id="MAT8"]
-albedo_color = Color("#b9bbb6")
+albedo_color = Color(0.725490, 0.733333, 0.713725, 1.0)
 roughness = 0.86
 
 [sub_resource type="BoxMesh" id="MESH9"]
@@ -45,14 +45,14 @@ size = Vector3(2.3, 0.8, 3.3)
 size = Vector3(2.3, 0.8, 3.3)
 
 [sub_resource type="StandardMaterial3D" id="MAT13"]
-albedo_color = Color("#e2d6c0")
+albedo_color = Color(0.886275, 0.839216, 0.752941, 1.0)
 roughness = 0.86
 
 [sub_resource type="BoxMesh" id="MESH14"]
 size = Vector3(1.7, 0.18, 0.6)
 
 [sub_resource type="StandardMaterial3D" id="MAT16"]
-albedo_color = Color("#faf2e4")
+albedo_color = Color(0.980392, 0.949020, 0.894118, 1.0)
 roughness = 0.86
 
 [sub_resource type="BoxMesh" id="MESH17"]
@@ -62,7 +62,7 @@ size = Vector3(2.7, 0.95, 1.25)
 size = Vector3(2.7, 0.95, 1.25)
 
 [sub_resource type="StandardMaterial3D" id="MAT19"]
-albedo_color = Color("#6a8196")
+albedo_color = Color(0.415686, 0.505882, 0.588235, 1.0)
 roughness = 0.86
 
 [sub_resource type="BoxMesh" id="MESH20"]
@@ -72,7 +72,7 @@ size = Vector3(1.65, 1.6, 2.4)
 size = Vector3(1.65, 1.6, 2.4)
 
 [sub_resource type="StandardMaterial3D" id="MAT22"]
-albedo_color = Color("#c5d4cc")
+albedo_color = Color(0.772549, 0.831373, 0.800000, 1.0)
 roughness = 0.86
 
 [sub_resource type="BoxMesh" id="MESH23"]
@@ -82,14 +82,14 @@ size = Vector3(1.6, 1.1, 1.4)
 size = Vector3(1.6, 1.1, 1.4)
 
 [sub_resource type="StandardMaterial3D" id="MAT25"]
-albedo_color = Color("#806c59")
+albedo_color = Color(0.501961, 0.423529, 0.349020, 1.0)
 roughness = 0.86
 
 [sub_resource type="BoxMesh" id="MESH26"]
 size = Vector3(1.35, 2.25, 0.11)
 
 [sub_resource type="StandardMaterial3D" id="MAT28"]
-albedo_color = Color("#8b715d")
+albedo_color = Color(0.545098, 0.443137, 0.364706, 1.0)
 roughness = 0.86
 
 [sub_resource type="BoxMesh" id="MESH29"]
@@ -213,13 +213,15 @@ shape = SubResource("SHAPE24")
 
 [node name="PortaCasa" type="StaticBody3D" parent="."]
 collision_layer = 1
-position = Vector3(0, 1.12, 5.85)
+position = Vector3(-0.675, 1.12, 5.85)
 
 [node name="Visual" type="MeshInstance3D" parent="PortaCasa"]
+position = Vector3(0.675, 0, 0)
 mesh = SubResource("MESH26")
 material_override = SubResource("MAT28")
 
 [node name="Collision" type="CollisionShape3D" parent="PortaCasa"]
+position = Vector3(0.675, 0, 0)
 shape = SubResource("CollisionPortaCasa")
 
 [node name="ParedeEntradaA" type="StaticBody3D" parent="."]

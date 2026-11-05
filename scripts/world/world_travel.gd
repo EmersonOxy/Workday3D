@@ -31,7 +31,7 @@ func configure(main_scene: Node3D, actor: CharacterBody3D) -> void:
 	office_zones.name = "OfficeInteractionZones"
 	host.add_child(office_zones)
 	_create_office_interactions()
-	for name in ["Room", "OfficeTable", "OfficeChair", "PCSetup", "Monitor", "KeyLight", "DirectionalLight3D"]:
+	for name in ["Room", "OfficeTable", "OfficeChair", "Monitor", "KeyLight", "DirectionalLight3D"]:
 		var node := host.get_node_or_null(name) as Node3D
 		if node != null:
 			office_visible_nodes.append(node)
@@ -113,16 +113,20 @@ func _create_office_interactions() -> void:
 	clock_face.material_override = green
 	office_zones.add_child(clock_face)
 	_office_zone("Ponto", Vector3(-3.0, 1.0, -4.7), &"clock", "Bater ponto")
-	var door := MeshInstance3D.new()
+	var door := Node3D.new()
 	door.name = "OfficeDoor"
+	door.position = Vector3(2.5 - 0.65, 1.12, -5.83)
+	office_zones.add_child(door)
+	var door_visual := MeshInstance3D.new()
+	door_visual.name = "Visual"
 	var door_mesh := BoxMesh.new()
 	door_mesh.size = Vector3(1.3, 2.25, 0.11)
-	door.mesh = door_mesh
-	door.position = Vector3(2.5, 1.12, -5.83)
+	door_visual.mesh = door_mesh
+	door_visual.position = Vector3(0.65, 0, 0)
 	var door_mat := StandardMaterial3D.new()
 	door_mat.albedo_color = Color("#866957")
-	door.material_override = door_mat
-	office_zones.add_child(door)
+	door_visual.material_override = door_mat
+	door.add_child(door_visual)
 	_office_zone("OfficeExit", Vector3(2.5, 1.0, -4.6), &"office_exit", "Sair do escritório", NodePath("../OfficeDoor"))
 
 func _active_zones() -> Array[Area3D]:

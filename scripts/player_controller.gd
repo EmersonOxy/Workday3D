@@ -472,7 +472,7 @@ func _update_hint() -> void:
 	elif mode == Mode.SEATED:
 		hint.text = "E · Levantar   |   Clique no monitor · Usar PC"
 	elif mode == Mode.FREE:
-		var world_prompt := host.travel.interaction_prompt() if host.get("travel") != null else ""
+		var world_prompt: String = host.travel.interaction_prompt() if host.get("travel") != null else ""
 		hint.text = world_prompt if not world_prompt.is_empty() else ("E · Sentar" if host.travel.location == "office" and _near_chair() else "W A S D · Caminhar")
 	else:
 		hint.text = ""
