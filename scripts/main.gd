@@ -5,6 +5,11 @@ const SCREEN_SIZE := Vector2(0.86, 0.48)
 const VIEWPORT_SIZE := Vector2i(1280, 720)
 const DESKTOP_SCREEN_FILL := 0.94
 const WORKER_SKIN := preload("res://assets/materials/worker_skin.tres")
+@export var desk_cat_offset := Vector3(-0.42, 0.0, 0.25):
+	set(value):
+		desk_cat_offset = value
+		if is_node_ready():
+			_place_desk_cat()
 @export_range(10.0, 85.0, 1.0) var horizontal_look_limit_degrees := 65.0
 @export_range(45.0, 100.0, 1.0) var seated_thigh_angle := 82.0:
 	set(value):
@@ -23,8 +28,8 @@ const WORKER_SKIN := preload("res://assets/materials/worker_skin.tres")
 @onready var camera: Camera3D = $CameraPivot/FirstPersonCamera
 @onready var monitor_area: Area3D = $MonitorArea
 @onready var monitor_screen: MeshInstance3D = $Monitor/Screen
-@onready var pc_setup: Node3D = $PCSetup
 @onready var worker_root: Node3D = $Character/OfficeWorker
+@onready var desk_cat: Sprite3D = $DeskCat
 
 @onready var desktop_viewport: SubViewport = $DesktopSubViewport
 @onready var desktop: Control = $DesktopSubViewport/WorkOSDesktop
@@ -53,10 +58,12 @@ func _process(_delta: float) -> void:
 	if pose_inputs != last_pose_inputs:
 		last_pose_inputs = pose_inputs
 		_apply_seated_pose()
+		_place_desk_cat()
 
 func _ready() -> void:
 	_apply_model_fixes()
 	_sync_furniture_collisions()
+	_place_desk_cat()
 	if Engine.is_editor_hint():
 		return
 
@@ -91,11 +98,6 @@ func _apply_model_fixes() -> void:
 			var material: Material = mesh_node.mesh.surface_get_material(surface)
 			if material != null and material.resource_name == "Wolf3D_Body":
 				mesh_node.set_surface_override_material(surface, WORKER_SKIN)
-	# The PC GLB includes a 2 x 2 m floor plane intended for a product render.
-	var display_plane := pc_setup.find_child("Plane", true, false)
-	if display_plane is VisualInstance3D:
-		display_plane.visible = false
-
 	# Fold the rig's legs into a static seated pose. The source GLB contains a
 	# skeleton but no animation clips, so this is applied both in the editor and
 	# when the scene runs.
@@ -261,6 +263,13 @@ func _table_top_height() -> float:
 			var world: Vector3 = mesh_node.global_transform * bounds.get_endpoint(corner)
 			top = maxf(top, world.y)
 	return top
+
+func _place_desk_cat() -> void:
+	if desk_cat == null or not is_instance_valid(desk_cat): return
+	var table: Node3D = $OfficeTable
+	var table_basis := table.global_basis.orthonormalized()
+	desk_cat.global_position = table.global_position + table_basis * Vector3(desk_cat_offset.x, 0.0, desk_cat_offset.z)
+	desk_cat.global_position.y = _table_top_height() + desk_cat_offset.y + 0.006
 
 func pose_transition_hands(skeleton: Skeleton3D, standing: float, _time: float) -> void:
 	var targets := _runtime_hand_targets()

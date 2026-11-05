@@ -4,7 +4,6 @@
 [ext_resource type="Script" path="res://scripts/world/world_travel.gd" id="world_travel"]
 [ext_resource type="PackedScene" uid="uid://cx6ukce427hiy" path="res://assets/models/office_chair.glb" id="2_chair"]
 [ext_resource type="PackedScene" uid="uid://blnp50a8rqure" path="res://assets/models/office_table.glb" id="3_table"]
-[ext_resource type="PackedScene" uid="uid://dsx0nnidpu3dh" path="res://assets/models/pc_setup_-_game_ready.glb" id="4_pc"]
 [ext_resource type="PackedScene" uid="uid://b5yaa8bdt0k3f" path="res://assets/models/the_character_of_an_office_worker.glb" id="5_worker"]
 [ext_resource type="PackedScene" uid="uid://bchbw0joji7h4" path="res://scenes/workos_desktop.tscn" id="7_workos"]
 [ext_resource type="Script" uid="uid://dtnltkwfv5w1n" path="res://scripts/anchored_targets.gd" id="anchor_targets"]
@@ -14,6 +13,7 @@
 [ext_resource type="Script" uid="uid://csww4naoi2yev" path="res://scripts/player_pose_adjustments.gd" id="pose_adjustments"]
 [ext_resource type="Script" uid="uid://dag7gqx35shpb" path="res://scripts/pose_handle.gd" id="pose_handle"]
 [ext_resource type="PackedScene" path="res://scenes/world_collisions.tscn" id="world_collisions"]
+[ext_resource type="PackedScene" path="res://scenes/props/workday_cat_3d.tscn" id="desk_cat"]
 
 [sub_resource type="Environment" id="RoomEnvironment"]
 background_mode = 1
@@ -110,9 +110,7 @@ transform = Transform3D(0.015, 0, 0, 0, 0.02, 0, 0, 0, 0.015, 0.36454177, 0.6873
 [node name="OfficeChair" parent="." unique_id=493463090 instance=ExtResource("2_chair")]
 transform = Transform3D(0.01, 0, 0, 0, 0.008, 0, 0, 0, 0.01, 0, 0, -1.0948821)
 
-[node name="PCSetup" parent="." unique_id=1697735894 instance=ExtResource("4_pc")]
-transform = Transform3D(0.55, 0, 0, 0, 0.55, 0, 0, 0, 0.55, -1.3474561, 0.615, -0.1)
-visible = false
+[node name="DeskCat" parent="." instance=ExtResource("desk_cat")]
 
 [node name="Monitor" type="Node3D" parent="." unique_id=1792786063]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.09832984, -0.08660671)

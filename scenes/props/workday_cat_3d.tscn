@@ -1,0 +1,10 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/props/workday_cat_3d.gd" id="1_cat"]
+
+[node name="WorkdayCat3D" type="Sprite3D"]
+billboard = 2
+pixel_size = 0.0025
+offset = Vector2(0, 60)
+texture_filter = 0
+script = ExtResource("1_cat")
