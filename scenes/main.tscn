@@ -1,0 +1,161 @@
+[gd_scene format=3 uid="uid://bv7dnyh0bxqg7"]
+
+[ext_resource type="Script" uid="uid://50npccyfxvrt" path="res://scripts/main.gd" id="1_main"]
+[ext_resource type="PackedScene" uid="uid://cx6ukce427hiy" path="res://assets/models/office_chair.glb" id="2_chair"]
+[ext_resource type="PackedScene" uid="uid://blnp50a8rqure" path="res://assets/models/office_table.glb" id="3_table"]
+[ext_resource type="PackedScene" uid="uid://dsx0nnidpu3dh" path="res://assets/models/pc_setup_-_game_ready.glb" id="4_pc"]
+[ext_resource type="PackedScene" uid="uid://b5yaa8bdt0k3f" path="res://assets/models/the_character_of_an_office_worker.glb" id="5_worker"]
+[ext_resource type="Texture2D" uid="uid://bt43qgdl4yadl" path="res://assets/ui/desktop_preview.svg" id="6_preview"]
+
+[sub_resource type="Environment" id="RoomEnvironment"]
+background_mode = 1
+background_color = Color(0.09, 0.11, 0.15, 1)
+ambient_light_source = 1
+ambient_light_color = Color(0.7, 0.76, 0.86, 1)
+ambient_light_energy = 0.65
+
+[sub_resource type="BoxMesh" id="FloorMesh"]
+size = Vector3(12, 0.12, 12)
+
+[sub_resource type="StandardMaterial3D" id="FloorMaterial"]
+albedo_color = Color(0.19, 0.22, 0.26, 1)
+roughness = 0.82
+
+[sub_resource type="BoxMesh" id="BackWallMesh"]
+size = Vector3(12, 4, 0.12)
+
+[sub_resource type="StandardMaterial3D" id="WallMaterial"]
+albedo_color = Color(0.31, 0.35, 0.4, 1)
+roughness = 0.9
+
+[sub_resource type="BoxMesh" id="SideWallMesh"]
+size = Vector3(0.12, 4, 12)
+
+[sub_resource type="BoxMesh" id="MonitorFrameMesh"]
+size = Vector3(0.96, 0.58, 0.07)
+
+[sub_resource type="StandardMaterial3D" id="MonitorFrameMaterial"]
+albedo_color = Color(0.035, 0.045, 0.06, 1)
+metallic = 0.28
+roughness = 0.32
+
+[sub_resource type="StandardMaterial3D" id="MonitorScreenMaterial"]
+cull_mode = 2
+shading_mode = 2
+albedo_texture = ExtResource("6_preview")
+uv1_scale = Vector3(-1, 1, 1)
+uv1_offset = Vector3(1, 0, 0)
+
+[sub_resource type="QuadMesh" id="MonitorScreenMesh"]
+size = Vector2(0.86, 0.48)
+
+[sub_resource type="BoxMesh" id="MonitorStandMesh"]
+size = Vector3(0.075, 0.23, 0.07)
+
+[sub_resource type="BoxMesh" id="MonitorBaseMesh"]
+size = Vector3(0.34, 0.035, 0.22)
+
+[sub_resource type="BoxShape3D" id="MonitorHitShape"]
+size = Vector3(0.9, 0.52, 0.1)
+
+[node name="Workday3D" type="Node3D" unique_id=1395620767]
+script = ExtResource("1_main")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1024416628]
+environment = SubResource("RoomEnvironment")
+
+[node name="KeyLight" type="DirectionalLight3D" parent="." unique_id=1042569329]
+transform = Transform3D(0.88294756, 0.3488854, -0.3141378, 0, 0.66913056, 0.74314487, 0.46947157, -0.656158, 0.5908072, 0, 0, 0)
+light_energy = 1.2
+shadow_enabled = true
+
+[node name="Room" type="Node3D" parent="." unique_id=2121896487]
+
+[node name="Floor" type="MeshInstance3D" parent="Room" unique_id=2037837239]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.06, 0)
+mesh = SubResource("FloorMesh")
+surface_material_override/0 = SubResource("FloorMaterial")
+
+[node name="BackWall" type="MeshInstance3D" parent="Room" unique_id=2032826365]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 3.25)
+mesh = SubResource("BackWallMesh")
+surface_material_override/0 = SubResource("WallMaterial")
+
+[node name="SideWall" type="MeshInstance3D" parent="Room" unique_id=418636356]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.5, 2, 0)
+mesh = SubResource("SideWallMesh")
+surface_material_override/0 = SubResource("WallMaterial")
+
+[node name="OfficeTable" parent="." unique_id=1490753108 instance=ExtResource("3_table")]
+transform = Transform3D(0.01, 0, 0, 0, 0.01, 0, 0, 0, 0.01, 0.25, 0.6, -0.44)
+
+[node name="OfficeChair" parent="." unique_id=493463090 instance=ExtResource("2_chair")]
+transform = Transform3D(0.01, 0, 0, 0, 0.008, 0, 0, 0, 0.01, 0, 0, -1.0948821)
+
+[node name="PCSetup" parent="." unique_id=1697735894 instance=ExtResource("4_pc")]
+transform = Transform3D(0.55, 0, 0, 0, 0.55, 0, 0, 0, 0.55, -1.3474561, 0.615, -0.1)
+visible = false
+
+[node name="Monitor" type="Node3D" parent="." unique_id=1792786063]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.16)
+
+[node name="Bezel" type="MeshInstance3D" parent="Monitor" unique_id=509167738]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.18, 0)
+mesh = SubResource("MonitorFrameMesh")
+surface_material_override/0 = SubResource("MonitorFrameMaterial")
+
+[node name="Screen" type="MeshInstance3D" parent="Monitor" unique_id=28007689]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.18, -0.037)
+material_override = SubResource("MonitorScreenMaterial")
+mesh = SubResource("MonitorScreenMesh")
+
+[node name="Stand" type="MeshInstance3D" parent="Monitor" unique_id=207948525]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.755, 0)
+mesh = SubResource("MonitorStandMesh")
+surface_material_override/0 = SubResource("MonitorFrameMaterial")
+
+[node name="Base" type="MeshInstance3D" parent="Monitor" unique_id=161579298]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.635, 0.025)
+mesh = SubResource("MonitorBaseMesh")
+surface_material_override/0 = SubResource("MonitorFrameMaterial")
+
+[node name="MonitorArea" type="Area3D" parent="." unique_id=982716737]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.18, 0.105)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MonitorArea" unique_id=69656329]
+shape = SubResource("MonitorHitShape")
+
+[node name="Character" type="Node3D" parent="." unique_id=2012521267]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.44503438, -1.1219718)
+
+[node name="OfficeWorker" parent="Character" unique_id=701016619 instance=ExtResource("5_worker")]
+
+[node name="ArmRestTargets" type="Node3D" parent="." unique_id=293929924]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1.0948821)
+
+[node name="LeftHand" type="Marker3D" parent="ArmRestTargets" unique_id=1933615718]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.33, 0.71, 0.1)
+gizmo_extents = 0.06
+
+[node name="RightHand" type="Marker3D" parent="ArmRestTargets" unique_id=633037171]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.33, 0.71, 0.1)
+gizmo_extents = 0.06
+
+[node name="LeftElbow" type="Marker3D" parent="ArmRestTargets" unique_id=515173286]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.34, 0.77, -0.15)
+gizmo_extents = 0.06
+
+[node name="RightElbow" type="Marker3D" parent="ArmRestTargets" unique_id=713833095]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.34, 0.77, -0.15)
+gizmo_extents = 0.06
+
+[node name="CameraPivot" type="Node3D" parent="." unique_id=1747558821]
+transform = Transform3D(-1, 5.5126606e-08, -3.211443e-07, 0, 0.9855848, 0.16918235, 3.2584137e-07, 0.16918235, -0.9855848, 0, 1.2549657, -1.0519718)
+
+[node name="FirstPersonCamera" type="Camera3D" parent="CameraPivot" unique_id=188945773]
+transform = Transform3D(1, -1.7553521e-08, -2.5235352e-09, 1.7390242e-08, 0.998519, -0.05440507, 3.4748098e-09, 0.05440507, 0.998519, 2.7484674e-08, 0.014270544, -0.083133936)
+current = true
+fov = 66.0
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=1259285686]
+transform = Transform3D(1, 0, 0, 0, -0.041425698, 0.99914163, 0, -0.99914163, -0.041425698, 0, 4.134414, -1.4563982)

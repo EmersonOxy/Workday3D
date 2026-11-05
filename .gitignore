@@ -1,0 +1,7 @@
+.godot/
+.DS_Store
+*.log
+.env
+.env.*
+!.env.example
+export_credentials.cfg

@@ -1,0 +1,9 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[resource]
+resource_name = "WorkerSkinCompatibility"
+albedo_color = Color(0.792157, 0.541176, 0.431373, 1)
+metallic = 0.0
+roughness = 0.78
+metallic_specular = 0.25
+cull_mode = 2
