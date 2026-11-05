@@ -214,6 +214,10 @@ func _do_travel(zone: Area3D, destination: String, spawn_name: String) -> void:
 		if is_instance_valid(body):
 			body.collision_layer = office_collision_layers[body] if in_office else 0
 	if in_office:
+		# Reposiciona a porta do escritório após o retorno; ela não é descarregada.
+		var office_door := office_zones.get_node_or_null("OfficeDoor") as Node3D
+		if office_door != null:
+			office_door.rotation.y = 0.0
 		player.teleport_from_travel(Vector3(2.5, 0, -3.6), PI)
 	else:
 		var packed := load(LOCATIONS[destination]) as PackedScene
