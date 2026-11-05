@@ -1,0 +1,35 @@
+[gd_scene format=3]
+
+[ext_resource type="Theme" path="res://scenes/workos/theme.tres" id="theme"]
+
+[node name="CareerMenu" type="VBoxContainer"]
+offset_right = 1180.0
+offset_bottom = 550.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme = ExtResource("theme")
+theme_override_constants/separation = 10
+
+[node name="Title" type="Label" parent="."]
+layout_mode = 2
+text = "PORTAL RH · WORKDAY LTDA."
+
+[node name="Instructions" type="Label" parent="."]
+layout_mode = 2
+text = "Arquive documentos no setor correto e resolva pendências antes do prazo.\nA carreira tem 25 dias mínimos até CEO. O expediente dura quatro minutos."
+autowrap_mode = 3
+
+[node name="Result" type="Label" parent="."]
+layout_mode = 2
+text = ""
+
+[node name="Wallet" type="Label" parent="."]
+layout_mode = 2
+text = "Saldo · Recorde"
+
+[node name="Difficulty" type="OptionButton" parent="."]
+layout_mode = 2
+
+[node name="Start" type="Button" parent="."]
+layout_mode = 2
+text = "Iniciar nova carreira"

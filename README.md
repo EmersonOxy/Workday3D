@@ -21,3 +21,7 @@ A interface é renderizada em 1280×720 e preenche aproximadamente 94% da janela
 A área de trabalho nativa está em `scenes/workos_desktop.tscn`, instanciada no `DesktopSubViewport`. Os assets originais usam controles Godot e GDScript. Notas e wallpaper são salvos em `user://workos.cfg`. O escopo e a origem dos recursos estão em [Integração do WorkOS](docs/INTEGRACAO_WORKOS.md).
 
 Os GLB originais da raiz foram preservados. A cena usa cópias em `assets/models/`. Formatos, texturas e problemas encontrados estão descritos em [INSPECAO_MODELOS.md](INSPECAO_MODELOS.md).
+
+## Movimentação
+
+WASD para caminhar lentamente. E para levantar ou sentar perto da cadeira. Sentado, clique no monitor para entrar no WorkOS com a animação de digitação. Consulte [os controles e ajustes](docs/MOVIMENTACAO_PLAYER.md).

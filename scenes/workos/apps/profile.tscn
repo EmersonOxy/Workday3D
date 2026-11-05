@@ -1,0 +1,40 @@
+[gd_scene format=3]
+
+[ext_resource type="Theme" path="res://scenes/workos/theme.tres" id="theme"]
+
+[node name="Profile" type="VBoxContainer"]
+offset_right = 580.0
+offset_bottom = 350.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme = ExtResource("theme")
+theme_override_constants/separation = 10
+
+[node name="Heading" type="Label" parent="."]
+layout_mode = 2
+text = "WORKDAY LTDA. · CRACHÁ"
+
+[node name="Identity" type="Label" parent="."]
+layout_mode = 2
+text = "Nº 0000 · Funcionário"
+
+[node name="EmployeeName" type="LineEdit" parent="."]
+layout_mode = 2
+placeholder_text = "Nome do funcionário"
+max_length = 18
+
+[node name="Status" type="Label" parent="."]
+layout_mode = 2
+text = ""
+
+[node name="Save" type="Button" parent="."]
+layout_mode = 2
+text = "Salvar nome"
+
+[node name="Pins" type="Label" parent="."]
+layout_mode = 2
+text = "Broches"
+
+[node name="Statistics" type="Label" parent="."]
+layout_mode = 2
+text = "Saldo · Recorde · Dias trabalhados"

@@ -31,16 +31,12 @@ static func column(parent: Control) -> VBoxContainer:
 	return list
 
 static func calendar(parent: Control, game: Node) -> void:
-	var rows := column(parent)
-	var navigation := HBoxContainer.new()
-	rows.add_child(navigation)
+	parent = parent.get_node("Scroll/Content")
+	var navigation: HBoxContainer = parent.get_node("Navigation")
 	var cycle := [floori((game.day() - 1) / float(game.data.cycle))]
-	var title := label(navigation, "")
-	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var body := VBoxContainer.new()
-	rows.add_child(body)
-	var details := VBoxContainer.new()
-	rows.add_child(details)
+	var title: Label = navigation.get_node("Title")
+	var body: VBoxContainer = parent.get_node("Body")
+	var details: VBoxContainer = parent.get_node("Details")
 	var paint := func() -> void:
 		clear(body)
 		clear(details)
@@ -79,20 +75,19 @@ static func calendar(parent: Control, game: Node) -> void:
 			cell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			cell.tooltip_text = "\n".join(names)
 			if day == game.day(): cell.modulate = Color("a4e4d2")
-	button(navigation, "←", func() -> void: cycle[0] = maxi(0, cycle[0] - 1); paint.call())
-	button(navigation, "→", func() -> void: cycle[0] += 1; paint.call())
-	button(navigation, "Hoje", func() -> void: cycle[0] = floori((game.day() - 1) / float(game.data.cycle)); paint.call())
+	navigation.get_node("Previous").pressed.connect(func() -> void: cycle[0] = maxi(0, cycle[0] - 1); paint.call())
+	navigation.get_node("Next").pressed.connect(func() -> void: cycle[0] += 1; paint.call())
+	navigation.get_node("Today").pressed.connect(func() -> void: cycle[0] = floori((game.day() - 1) / float(game.data.cycle)); paint.call())
 	paint.call()
 	var date := Time.get_date_dict_from_system()
-	label(rows, "Data do aparelho: %02d/%02d/%04d. Eventos seguem os dias do expediente." % [date.day, date.month, date.year])
+	parent.get_node("Date").text = "Data do aparelho: %02d/%02d/%04d. Eventos seguem os dias do expediente." % [date.day, date.month, date.year]
 
 static func _step_name(id: String) -> String:
 	return {"files": "Documentos arquivados", "emails": "E-mails respondidos", "typed": "Relatórios digitados", "cafe": "Cafés", "bosses": "Escapar do chefe", "sign": "Assinar cartão", "decor": "Enfeites adquiridos", "duda": "Partidas com Duda", "buy": "Presentes comprados", "calm": "Estresse abaixo de"}.get(id, id)
 
 static func archive(parent: Control, game: Node) -> void:
-	var tabs := HBoxContainer.new()
-	parent.add_child(tabs)
-	var list := column(parent)
+	var tabs: HBoxContainer = parent.get_node("Tabs")
+	var list: VBoxContainer = parent.get_node("Scroll/List")
 	var show := func(section: String) -> void:
 		clear(list)
 		match section:
@@ -112,65 +107,41 @@ static func archive(parent: Control, game: Node) -> void:
 					label(list, str(achievement[0]) + (" · " + str(game.quests.ach[id]) if game.quests.ach.has(id) else " · Bloqueada"))
 					label(list, achievement[1])
 	for key in ["quests", "pins", "unlocks", "ach"]:
-		button(tabs, str(game.texts().ui.ev.sections[key]), show.bind(key))
+		tabs.get_node(key).text = str(game.texts().ui.ev.sections[key])
+		tabs.get_node(key).pressed.connect(show.bind(key))
 	show.call("quests")
 
 static func profile(parent: Control, game: Node) -> void:
-	var list := column(parent)
-	label(list, "WORKDAY LTDA. · CRACHÁ")
-	label(list, "Nº %d\n%s" % [game.profile.id, game.texts().ranks[int(game.career.get("rank", 0))]])
-	var name := LineEdit.new()
+	parent.get_node("Identity").text = "Nº %d\n%s" % [game.profile.id, game.texts().ranks[int(game.career.get("rank", 0))]]
+	var name: LineEdit = parent.get_node("EmployeeName")
 	name.text = game.profile.name
-	name.max_length = 18
-	name.placeholder_text = "Nome do funcionário"
-	list.add_child(name)
-	var status := label(list, "")
-	button(list, "Salvar nome", func() -> void:
+	var status: Label = parent.get_node("Status")
+	parent.get_node("Save").pressed.connect(func() -> void:
 		if name.text.strip_edges().is_empty(): return
 		game.profile.name = name.text.strip_edges()
 		status.text = "Perfil salvo" if game.save_game() else "Não foi possível salvar")
-	label(list, "Broches: " + ", ".join(game.quests.pins))
-	label(list, "Saldo: R$ %d\nRecorde: %d\nDias trabalhados: %d" % [game.profile.wallet, game.profile.best, game.profile.stats.get("days", 0)])
+	parent.get_node("Pins").text = "Broches: " + ", ".join(game.quests.pins)
+	parent.get_node("Statistics").text = "Saldo: R$ %d\nRecorde: %d\nDias trabalhados: %d" % [game.profile.wallet, game.profile.best, game.profile.stats.get("days", 0)]
 
 static func messenger(parent: Control, social: Node) -> void:
 	var game: Node = social.game
-	var header := HBoxContainer.new()
-	parent.add_child(header)
-	var status := OptionButton.new()
+	var status: OptionButton = parent.get_node("Header/Presence")
 	for title in ["Online", "Ocupado", "Ausente", "Não perturbe", "Invisível"]: status.add_item(title)
 	var statuses := ["online", "busy", "away", "dnd", "invisible"]
 	status.selected = maxi(0, statuses.find(social.state.status))
-	header.add_child(status)
 	status.item_selected.connect(func(index: int) -> void: social.state.status = statuses[index]; game.save_game())
-	var personal := LineEdit.new()
-	personal.placeholder_text = "Mensagem pessoal"
+	var personal: LineEdit = parent.get_node("Header/Personal")
 	personal.text = social.state.message
-	personal.max_length = 48
-	personal.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	header.add_child(personal)
 	personal.text_submitted.connect(func(value: String) -> void: social.state.message = value; game.save_game())
-	var body := HBoxContainer.new()
-	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	parent.add_child(body)
-	var contacts := VBoxContainer.new()
+	var contacts: VBoxContainer = parent.get_node("Body/Contacts")
 	contacts.custom_minimum_size.x = 160
-	body.add_child(contacts)
-	var chat := VBoxContainer.new()
-	chat.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	body.add_child(chat)
-	var title := label(chat, "Escolha um contato")
-	var log := RichTextLabel.new()
-	log.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	var chat: VBoxContainer = parent.get_node("Body/Chat")
+	var title: Label = chat.get_node("Title")
+	var log: RichTextLabel = chat.get_node("Log")
 	log.custom_minimum_size.y = 140
-	log.scroll_following = true
-	log.selection_enabled = true
 	log.add_theme_color_override("default_color", Color("2a1f2d"))
-	chat.add_child(log)
-	var choices := VBoxContainer.new()
-	chat.add_child(choices)
-	var input := LineEdit.new()
-	input.placeholder_text = "Digite uma mensagem…"
-	chat.add_child(input)
+	var choices: VBoxContainer = chat.get_node("Choices")
+	var input: LineEdit = chat.get_node("Input")
 	var selected := [""]
 	var signature := [""]
 	var refresh := func() -> void:
@@ -221,11 +192,7 @@ static func messenger(parent: Control, social: Node) -> void:
 	refresh.call()
 
 static func backup(parent: Control, game: Node) -> void:
-	label(parent, "Backup do progresso")
-	label(parent, "Copie o conteúdo abaixo para guardar uma cópia do progresso desta versão nativa.")
-	var text := TextEdit.new()
-	text.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	var text: TextEdit = parent.get_node("Data")
 	text.text = game.export_backup()
-	parent.add_child(text)
-	button(parent, "Atualizar backup", func() -> void: text.text = game.export_backup())
-	button(parent, "Copiar", func() -> void: DisplayServer.clipboard_set(text.text))
+	parent.get_node("Refresh").pressed.connect(func() -> void: text.text = game.export_backup())
+	parent.get_node("Copy").pressed.connect(func() -> void: DisplayServer.clipboard_set(text.text))

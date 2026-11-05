@@ -82,32 +82,19 @@ func _save() -> void:
 	preferences.save(save_path)
 
 func build_ui(parent: Control) -> void:
-	var now := Label.new()
-	now.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	parent.add_child(now)
-	var sound := CheckButton.new()
-	sound.text = "Reproduzir música"
+	var now: Label = parent.get_node("Now")
+	var sound: CheckButton = parent.get_node("Sound")
 	sound.button_pressed = sound_on
-	parent.add_child(sound)
 	sound.toggled.connect(set_sound)
 	for index in TRACKS.size():
-		var track := CheckBox.new()
+		var track: CheckBox = parent.get_node("Tracks/Track%d" % index)
 		track.text = "%s\n%s" % [TRACKS[index][1], TRACKS[index][2]]
 		track.button_pressed = enabled[index]
-		parent.add_child(track)
 		track.toggled.connect(func(value: bool) -> void: set_track_enabled(index, value))
-	var slider := HSlider.new()
-	slider.min_value = 0
-	slider.max_value = 1
-	slider.step = 0.01
+	var slider: HSlider = parent.get_node("Volume")
 	slider.value = volume
-	slider.tooltip_text = "Volume da música"
-	parent.add_child(slider)
 	slider.value_changed.connect(set_volume)
-	var next := Button.new()
-	next.text = "Próxima faixa"
-	parent.add_child(next)
-	next.pressed.connect(skip)
+	parent.get_node("Next").pressed.connect(skip)
 	var refresh := func() -> void:
 		if not is_instance_valid(now): return
 		now.text = "Som desligado" if not sound_on else ("Nenhuma faixa selecionada" if selected < 0 else "Tocando: " + TRACKS[selected][1])

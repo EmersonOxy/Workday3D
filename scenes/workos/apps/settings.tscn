@@ -1,0 +1,28 @@
+[gd_scene format=3]
+
+[ext_resource type="Theme" path="res://scenes/workos/theme.tres" id="theme"]
+
+[node name="Settings" type="VBoxContainer"]
+offset_right = 580.0
+offset_bottom = 350.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme = ExtResource("theme")
+theme_override_constants/separation = 10
+
+[node name="Heading" type="Label" parent="."]
+layout_mode = 2
+text = "CONFIGURAÇÕES"
+
+[node name="WallpaperLabel" type="Label" parent="."]
+layout_mode = 2
+text = "Papel de parede"
+
+[node name="Wallpapers" type="OptionButton" parent="."]
+layout_mode = 2
+
+[node name="Preview" type="TextureRect" parent="."]
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+size_flags_vertical = 3

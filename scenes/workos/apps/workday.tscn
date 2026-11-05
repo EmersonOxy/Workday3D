@@ -1,0 +1,22 @@
+[gd_scene format=3]
+
+[ext_resource type="Theme" path="res://scenes/workos/theme.tres" id="theme"]
+[ext_resource type="Script" path="res://scripts/workos/workday_app.gd" id="script"]
+
+[ext_resource type="PackedScene" path="res://scenes/workos/phases/menu.tscn" id="preview"]
+
+[node name="Workday" type="VBoxContainer"]
+offset_right = 1180.0
+offset_bottom = 550.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme = ExtResource("theme")
+theme_override_constants/separation = 10
+script = ExtResource("script")
+
+[node name="Phase" type="VBoxContainer" parent="."]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="MenuPreview" parent="Phase" instance=ExtResource("preview")]
+layout_mode = 2

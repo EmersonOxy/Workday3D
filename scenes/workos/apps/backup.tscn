@@ -1,0 +1,32 @@
+[gd_scene format=3]
+
+[ext_resource type="Theme" path="res://scenes/workos/theme.tres" id="theme"]
+
+[node name="Backup" type="VBoxContainer"]
+offset_right = 580.0
+offset_bottom = 350.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme = ExtResource("theme")
+theme_override_constants/separation = 10
+
+[node name="Heading" type="Label" parent="."]
+layout_mode = 2
+text = "BACKUP DO PROGRESSO"
+
+[node name="Description" type="Label" parent="."]
+layout_mode = 2
+text = "Copie o conteúdo abaixo para guardar uma cópia do progresso."
+autowrap_mode = 3
+
+[node name="Data" type="TextEdit" parent="."]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Refresh" type="Button" parent="."]
+layout_mode = 2
+text = "Atualizar backup"
+
+[node name="Copy" type="Button" parent="."]
+layout_mode = 2
+text = "Copiar"

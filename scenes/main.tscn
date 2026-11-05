@@ -5,13 +5,14 @@
 [ext_resource type="PackedScene" uid="uid://blnp50a8rqure" path="res://assets/models/office_table.glb" id="3_table"]
 [ext_resource type="PackedScene" uid="uid://dsx0nnidpu3dh" path="res://assets/models/pc_setup_-_game_ready.glb" id="4_pc"]
 [ext_resource type="PackedScene" uid="uid://b5yaa8bdt0k3f" path="res://assets/models/the_character_of_an_office_worker.glb" id="5_worker"]
-[ext_resource type="Texture2D" uid="uid://bt43qgdl4yadl" path="res://assets/ui/desktop_preview.svg" id="6_preview"]
-
-[ext_resource type="PackedScene" path="res://scenes/workos_desktop.tscn" id="7_workos"]
-
-[sub_resource type="ViewportTexture" id="WorkOSTexture"]
-resource_local_to_scene = true
-viewport_path = NodePath("DesktopSubViewport")
+[ext_resource type="PackedScene" uid="uid://bchbw0joji7h4" path="res://scenes/workos_desktop.tscn" id="7_workos"]
+[ext_resource type="Script" uid="uid://dtnltkwfv5w1n" path="res://scripts/anchored_targets.gd" id="anchor_targets"]
+[ext_resource type="Script" uid="uid://c1ikpj0eb2e5v" path="res://scripts/first_person_camera.gd" id="camera_controls"]
+[ext_resource type="AnimationLibrary" path="res://assets/animations/generated/player_library.res" id="player_animations"]
+[ext_resource type="Script" uid="uid://bnwc4a1ngtaga" path="res://scripts/player_controller.gd" id="player_controller"]
+[ext_resource type="Script" uid="uid://csww4naoi2yev" path="res://scripts/player_pose_adjustments.gd" id="pose_adjustments"]
+[ext_resource type="Script" uid="uid://dag7gqx35shpb" path="res://scripts/pose_handle.gd" id="pose_handle"]
+[ext_resource type="PackedScene" path="res://scenes/world_collisions.tscn" id="world_collisions"]
 
 [sub_resource type="Environment" id="RoomEnvironment"]
 background_mode = 1
@@ -45,6 +46,9 @@ albedo_color = Color(0.035, 0.045, 0.06, 1)
 metallic = 0.28
 roughness = 0.32
 
+[sub_resource type="ViewportTexture" id="WorkOSTexture"]
+viewport_path = NodePath("DesktopSubViewport")
+
 [sub_resource type="StandardMaterial3D" id="MonitorScreenMaterial"]
 cull_mode = 2
 shading_mode = 2
@@ -63,6 +67,13 @@ size = Vector3(0.34, 0.035, 0.22)
 
 [sub_resource type="BoxShape3D" id="MonitorHitShape"]
 size = Vector3(0.9, 0.52, 0.1)
+
+[sub_resource type="CapsuleShape3D" id="PlayerCapsule"]
+radius = 0.22
+height = 1.64
+
+[sub_resource type="BoxShape3D" id="TypingZoneShape"]
+size = Vector3(0.65, 0.18, 0.35)
 
 [node name="Workday3D" type="Node3D" unique_id=1395620767]
 script = ExtResource("1_main")
@@ -93,7 +104,7 @@ mesh = SubResource("SideWallMesh")
 surface_material_override/0 = SubResource("WallMaterial")
 
 [node name="OfficeTable" parent="." unique_id=1490753108 instance=ExtResource("3_table")]
-transform = Transform3D(0.01, 0, 0, 0, 0.01, 0, 0, 0, 0.01, 0.25, 0.6, -0.44)
+transform = Transform3D(0.015, 0, 0, 0, 0.02, 0, 0, 0, 0.015, 0.36454177, 0.68732166, -0.7646103)
 
 [node name="OfficeChair" parent="." unique_id=493463090 instance=ExtResource("2_chair")]
 transform = Transform3D(0.01, 0, 0, 0, 0.008, 0, 0, 0, 0.01, 0, 0, -1.0948821)
@@ -103,15 +114,15 @@ transform = Transform3D(0.55, 0, 0, 0, 0.55, 0, 0, 0, 0.55, -1.3474561, 0.615, -
 visible = false
 
 [node name="Monitor" type="Node3D" parent="." unique_id=1792786063]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.16)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.09832984, -0.08660671)
 
 [node name="Bezel" type="MeshInstance3D" parent="Monitor" unique_id=509167738]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.18, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1400329, 0)
 mesh = SubResource("MonitorFrameMesh")
 surface_material_override/0 = SubResource("MonitorFrameMaterial")
 
 [node name="Screen" type="MeshInstance3D" parent="Monitor" unique_id=28007689]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.18, -0.037)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1400329, -0.037)
 material_override = SubResource("MonitorScreenMaterial")
 mesh = SubResource("MonitorScreenMesh")
 
@@ -129,30 +140,45 @@ surface_material_override/0 = SubResource("MonitorFrameMaterial")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.18, 0.105)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="MonitorArea" unique_id=69656329]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.079815865, -0.1718589)
 shape = SubResource("MonitorHitShape")
 
-[node name="Character" type="Node3D" parent="." unique_id=2012521267]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.44503438, -1.1219718)
+[node name="Character" type="CharacterBody3D" parent="." unique_id=2012521267]
+transform = Transform3D(1, 0, 0, 0, 0.9940504, 0.10892115, 0, -0.10892115, 0.9940504, 0, -0.44503438, -1.1491034)
+collision_layer = 2
+script = ExtResource("player_controller")
+velocidade_caminhada_m_s = 1.5
+suavidade_direcao = 15.0
+
+[node name="BodyShape" type="CollisionShape3D" parent="Character" unique_id=769247845]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.84, 0)
+shape = SubResource("PlayerCapsule")
+disabled = true
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="Character" unique_id=1158612456]
+libraries/ = ExtResource("player_animations")
 
 [node name="OfficeWorker" parent="Character" unique_id=701016619 instance=ExtResource("5_worker")]
 
 [node name="ArmRestTargets" type="Node3D" parent="." unique_id=293929924]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1.0948821)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.19214791, -1.12067)
+script = ExtResource("anchor_targets")
+ancora = NodePath("../OfficeChair")
 
 [node name="LeftHand" type="Marker3D" parent="ArmRestTargets" unique_id=1933615718]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.33, 0.71, 0.1)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3512381, 0.8844238, 0.0047363043)
 gizmo_extents = 0.06
 
 [node name="RightHand" type="Marker3D" parent="ArmRestTargets" unique_id=633037171]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.33, 0.71, 0.1)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.36080095, 0.8775564, -0.0034586191)
 gizmo_extents = 0.06
 
 [node name="LeftElbow" type="Marker3D" parent="ArmRestTargets" unique_id=515173286]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.34, 0.77, -0.15)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3612381, 0.9444238, -0.2452637)
 gizmo_extents = 0.06
 
 [node name="RightElbow" type="Marker3D" parent="ArmRestTargets" unique_id=713833095]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.34, 0.77, -0.15)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.37080094, 0.9375564, -0.25345862)
 gizmo_extents = 0.06
 
 [node name="CameraPivot" type="Node3D" parent="." unique_id=1747558821]
@@ -161,16 +187,394 @@ transform = Transform3D(-1, 5.5126606e-08, -3.211443e-07, 0, 0.9855848, 0.169182
 [node name="FirstPersonCamera" type="Camera3D" parent="CameraPivot" unique_id=188945773]
 transform = Transform3D(1, -1.7553521e-08, -2.5235352e-09, 1.7390242e-08, 0.998519, -0.05440507, 3.4748098e-09, 0.05440507, 0.998519, 2.7484674e-08, 0.014270544, -0.083133936)
 current = true
-fov = 66.0
+script = ExtResource("camera_controls")
+intensidade_vertical = 0.07
+suavidade_balanco = 1.0
+inclinacao_maxima_graus = 1.0
+suavidade_inclinacao = 5.0
+corpo_visivel_em_pe = 0.65
+altura_em_pe = 1.67
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=1259285686]
 transform = Transform3D(1, 0, 0, 0, -0.041425698, 0.99914163, 0, -0.99914163, -0.041425698, 0, 4.134414, -1.4563982)
 
-[node name="DesktopSubViewport" type="SubViewport" parent="."]
+[node name="DesktopSubViewport" type="SubViewport" parent="." unique_id=1341501336]
+disable_3d = true
 gui_embed_subwindows = true
 size = Vector2i(1280, 720)
-disable_3d = true
 render_target_update_mode = 4
-gui_disable_input = false
 
-[node name="WorkOSDesktop" parent="DesktopSubViewport" instance=ExtResource("7_workos")]
+[node name="WorkOSDesktop" parent="DesktopSubViewport" unique_id=1613818060 instance=ExtResource("7_workos")]
+
+[node name="WorldCollisions" parent="." unique_id=1234121162 instance=ExtResource("world_collisions")]
+
+[node name="TypingTargets" type="Node3D" parent="." unique_id=1732477849]
+script = ExtResource("anchor_targets")
+ancora = NodePath("../OfficeTable")
+
+[node name="LeftHand" type="Marker3D" parent="TypingTargets" unique_id=475437539]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.22, 0.7, -0.45)
+gizmo_extents = 0.05
+
+[node name="RightHand" type="Marker3D" parent="TypingTargets" unique_id=308568616]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.22, 0.7, -0.45)
+gizmo_extents = 0.05
+
+[node name="LeftElbow" type="Marker3D" parent="TypingTargets" unique_id=290463057]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.39, 0.77, -0.85)
+gizmo_extents = 0.05
+
+[node name="RightElbow" type="Marker3D" parent="TypingTargets" unique_id=1891598500]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.39, 0.77, -0.85)
+gizmo_extents = 0.05
+
+[node name="TypingZone" type="Area3D" parent="TypingTargets" unique_id=237193188]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.72, -0.37)
+collision_layer = 0
+collision_mask = 0
+monitoring = false
+
+[node name="Shape" type="CollisionShape3D" parent="TypingTargets/TypingZone" unique_id=1354281782]
+shape = SubResource("TypingZoneShape")
+
+[node name="PoseAdjustments" type="Node3D" parent="." unique_id=336367307]
+script = ExtResource("pose_adjustments")
+coluna_rotacao = Vector3(-15.33, 0, 0)
+polegar_esquerdo = Vector3(11.46, 0, 0)
+indicador_esquerdo = Vector3(15.615, 19.76, 4.365)
+medio_esquerdo = Vector3(6.155, 21.515, 8.065)
+anelar_esquerdo = Vector3(3.83, 32.585, 7.66)
+mindinho_esquerdo = Vector3(15.615, 19.76, 0)
+polegar_direito = Vector3(20.025, 8.085, 0)
+indicador_direito = Vector3(-5.705, 19.76, 0)
+medio_direito = Vector3(-6.175, 14.14, 30.15)
+anelar_direito = Vector3(3.985, 2.56, 12.895)
+mindinho_direito = Vector3(2.46, 3.265, 1.74)
+
+[node name="Corpo" type="Node3D" parent="PoseAdjustments" unique_id=1998349473]
+
+[node name="Quadril" type="Marker3D" parent="PoseAdjustments/Corpo" unique_id=1419599100]
+transform = Transform3D(0.9989187, -0.04181205, -0.020325512, 0.045648452, 0.9649568, 0.25840774, 0.00880868, -0.25905615, 0.96582216, -0.0014282295, 0.56206894, -1.1783184)
+gizmo_extents = 0.035
+script = ExtResource("pose_handle")
+osso = &"Hips"
+permitir_translacao = true
+ajuste = Transform3D(0.99999946, 3.3527595e-08, 1.210719e-08, -4.4237782e-09, 0.99999946, 1.7881382e-07, 3.7252885e-09, 1.19209226e-07, 0.99999946, -4.5401976e-09, -1.5646219e-07, 1.937151e-07)
+
+[node name="Coluna" type="Marker3D" parent="PoseAdjustments/Corpo" unique_id=925696021]
+transform = Transform3D(0.99918085, 0.034120273, -0.021756772, -0.02504347, 0.94370204, 0.3298475, 0.031786393, -0.32903245, 0.9437835, -0.005545591, 0.65709126, -1.2038285)
+gizmo_extents = 0.035
+script = ExtResource("pose_handle")
+osso = &"Spine"
+permitir_translacao = true
+ajuste = Transform3D(0.99999964, -8.195639e-08, 1.8114224e-07, -2.2351742e-07, 1.000004, 0, -9.9651515e-08, 7.8976154e-07, 1.0000037, 3.391043e-11, 6.856954e-08, 5.4854386e-08)
+
+[node name="Peito" type="Marker3D" parent="PoseAdjustments/Corpo" unique_id=1051321783]
+transform = Transform3D(0.99858826, 0.045383006, -0.027598029, -0.037860014, 0.97258466, 0.22944616, 0.037254374, -0.22807738, 0.97293, 0.003792522, 0.89666355, -1.2822474)
+gizmo_extents = 0.035
+script = ExtResource("pose_handle")
+osso = &"Spine2"
+permitir_translacao = true
+
+[node name="CoxaEsquerda" type="Marker3D" parent="PoseAdjustments/Corpo" unique_id=352796145]
+transform = Transform3D(-0.97785765, 0.20625076, -0.035564125, -0.0028733853, 0.15667817, 0.987646, 0.20927583, 0.9658741, -0.15261564, 0.09366241, 0.5705786, -1.1820132)
+gizmo_extents = 0.035
+script = ExtResource("pose_handle")
+osso = &"LeftUpLeg"
+
+[node name="CoxaDireita" type="Marker3D" parent="PoseAdjustments/Corpo" unique_id=1541331984]
+transform = Transform3D(-0.98658335, -0.16033609, -0.030911861, -0.058588058, 0.17087919, 0.9835491, -0.15241693, 0.9721589, -0.17797962, -0.09681937, 0.5618769, -1.1836833)
+gizmo_extents = 0.035
+script = ExtResource("pose_handle")
+osso = &"RightUpLeg"
+
+[node name="JoelhoEsquerdo" type="Marker3D" parent="PoseAdjustments/Corpo" unique_id=685655631]
+transform = Transform3D(-0.9964833, -0.05869945, 0.059873763, 0.06480584, -0.99227923, 0.1057512, 0.05320573, 0.10925916, 0.99258864, 0.18816108, 0.6423644, -0.7394749)
+gizmo_extents = 0.035
+script = ExtResource("pose_handle")
+osso = &"LeftLeg"
+ajuste = Transform3D(0.99992937, 2.965331e-06, 4.1760504e-06, -1.3727695e-05, 0.999998, 1.2049335e-05, -2.0658597e-05, -2.3917528e-06, 1.0000647, 0, 0, 0)
+
+[node name="JoelhoDireito" type="Marker3D" parent="PoseAdjustments/Corpo" unique_id=1577523349]
+transform = Transform3D(-0.94579023, 0.091385566, -0.31167197, -0.110491574, -0.9928958, 0.044164836, -0.30542162, 0.07620765, 0.949163, -0.17028126, 0.6401694, -0.73826504)
+gizmo_extents = 0.035
+script = ExtResource("pose_handle")
+osso = &"RightLeg"
+
+[node name="PeEsquerdo" type="Marker3D" parent="PoseAdjustments/Corpo" unique_id=911711550]
+transform = Transform3D(-0.998005, 0.0456682, -0.04370178, -0.061531417, -0.54367036, 0.8370407, 0.014468772, 0.8380557, 0.54539305, 0.16210645, 0.20193267, -0.69097966)
+gizmo_extents = 0.035
+script = ExtResource("pose_handle")
+osso = &"LeftFoot"
+ajuste = Transform3D(0.99997824, -4.014014e-07, 1.9121913e-05, -4.9453297e-07, 1.000016, -1.1026881e-05, -1.2224539e-05, 2.980241e-05, 1.0000044, 0, 0, 0)
+
+[node name="PeDireito" type="Marker3D" parent="PoseAdjustments/Corpo" unique_id=484144448]
+transform = Transform3D(-0.9529409, -0.2679963, -0.14174387, 0.030059475, -0.54875517, 0.8354429, -0.30167827, 0.79186255, 0.53098404, -0.12971893, 0.19946319, -0.70443964)
+gizmo_extents = 0.035
+script = ExtResource("pose_handle")
+osso = &"RightFoot"
+
+[node name="BracoEsquerdo" type="Node3D" parent="PoseAdjustments" unique_id=906066728]
+
+[node name="Ombro" type="Marker3D" parent="PoseAdjustments/BracoEsquerdo" unique_id=1779365295]
+transform = Transform3D(0.028842516, 0.85544765, -0.517085, -0.110167235, -0.51142836, -0.85223466, -0.99349445, 0.08154641, 0.07949136, 0.05743989, 1.0307221, -1.3187699)
+gizmo_extents = 0.035
+script = ExtResource("pose_handle")
+osso = &"LeftShoulder"
+
+[node name="Braco" type="Marker3D" parent="PoseAdjustments/BracoEsquerdo" unique_id=908708319]
+transform = Transform3D(-0.00084777176, 0.6679839, -0.7441749, 0.2282516, -0.7244013, -0.65049493, -0.9736019, -0.17041066, -0.15185441, 0.15914871, 0.9699153, -1.3090743)
+gizmo_extents = 0.035
+script = ExtResource("pose_handle")
+osso = &"LeftArm"
+
+[node name="Antebraco" type="Marker3D" parent="PoseAdjustments/BracoEsquerdo" unique_id=1108094699]
+transform = Transform3D(0.5056087, 0.006460082, -0.86273825, -0.826782, -0.2821406, -0.48664927, -0.24655738, 0.95935136, -0.13731182, 0.34961018, 0.7633674, -1.3576634)
+gizmo_extents = 0.035
+script = ExtResource("pose_handle")
+osso = &"LeftForeArm"
+
+[node name="Pulso" type="Marker3D" parent="PoseAdjustments/BracoEsquerdo" unique_id=1825133407]
+transform = Transform3D(0.9999995, -4.4703484e-08, -8.940697e-08, 1.3473057e-07, 2.2351742e-08, -0.9999996, 1.3514061e-07, 0.99999994, 5.9604645e-08, 0.3512381, 0.69227576, -1.1159338)
+gizmo_extents = 0.035
+script = ExtResource("pose_handle")
+osso = &"LeftHand"
+
+[node name="DedosEsquerdos" type="Node3D" parent="PoseAdjustments" unique_id=1716216006]
+
+[node name="Polegar1" type="Marker3D" parent="PoseAdjustments/DedosEsquerdos" unique_id=393989772]
+transform = Transform3D(0.759245, -0.45158303, 0.468635, 0.3171302, -0.37209022, -0.87233955, 0.56830883, 0.81093854, -0.13929701, 0.31888217, 0.68710303, -1.089582)
+gizmo_extents = 0.035
+script = ExtResource("pose_handle")
+osso = &"LeftHandThumb1"
+ajuste = Transform3D(0.9713782, 0.059560724, 0.22994876, -0.02059056, 0.9855269, -0.16827151, -0.2366433, 0.15871891, 0.9585474, 0, 0, 0)
+
+[node name="Polegar2" type="Marker3D" parent="PoseAdjustments/DedosEsquerdos" unique_id=925448908]
+transform = Transform3D(0.836888, -0.041750416, 0.5457787, 0.53929114, -0.10782183, -0.83518785, 0.09371632, 0.99329305, -0.06771915, 0.30019462, 0.6717049, -1.0560231)
+gizmo_extents = 0.035
+script = ExtResource("pose_handle")
+osso = &"LeftHandThumb2"
+ajuste = Transform3D(0.9999512, 0.0100656785, -0.0013311007, -0.0100728795, 0.99993014, -0.006493505, 0.0012670904, 0.0065080626, 0.9999792, 0, 0, 0)
+
+[node name="Polegar3" type="Marker3D" parent="PoseAdjustments/DedosEsquerdos" unique_id=82489150]
+transform = Transform3D(0.7599374, 0.2214607, 0.6111052, 0.63838154, -0.077357054, -0.76582265, -0.12232644, 0.9720962, -0.20016298, 0.29892182, 0.6684178, -1.0257409)
+gizmo_extents = 0.035
+script = ExtResource("pose_handle")
+osso = &"LeftHandThumb3"
+ajuste = Transform3D(0.9761114, 0.21328217, -0.04145757, -0.217263, 0.9599194, -0.1770575, 0.0020323868, 0.18183687, 0.98332626, 0, 0, 0)
+
+[node name="Indicador1" type="Marker3D" parent="PoseAdjustments/DedosEsquerdos" unique_id=264990865]
+transform = Transform3D(0.9988605, -0.043073308, 0.02053081, 0.0040059565, -0.3530566, -0.93559295, 0.047547754, 0.9346099, -0.35248196, 0.31589156, 0.69922805, -1.0184801)
+gizmo_extents = 0.035
+script = ExtResource("pose_handle")
+osso = &"LeftHandIndex1"
+ajuste = Transform3D(0.99796057, -0.06068586, 0.01981669, 0.056399286, 0.98353815, 0.17168182, -0.029909022, -0.17021455, 0.9849541, 0, 0, 0)
+
+[node name="Indicador2" type="Marker3D" parent="PoseAdjustments/DedosEsquerdos" unique_id=1746088367]
+transform = Transform3D(0.98716646, 0.13827808, -0.07987745, 0.1058205, -0.9410481, -0.3212934, -0.1195964, 0.30871785, -0.9436047, 0.3139672, 0.68345404, -0.97672296)
+gizmo_extents = 0.035
+script = ExtResource("pose_handle")
+osso = &"LeftHandIndex2"
+
+[node name="Indicador3" type="Marker3D" parent="PoseAdjustments/DedosEsquerdos" unique_id=2112620119]
+transform = Transform3D(0.95992696, 0.180525, -0.21435903, 0.17261699, -0.9834396, -0.055215616, -0.22077715, 0.016001076, -0.975193, 0.3178869, 0.6567794, -0.9679723)
+gizmo_extents = 0.035
+script = ExtResource("pose_handle")
+osso = &"LeftHandIndex3"
+
+[node name="Medio1" type="Marker3D" parent="PoseAdjustments/DedosEsquerdos" unique_id=355117560]
+transform = Transform3D(0.9998161, 0.006535124, 0.018000616, 0.018546429, -0.0962218, -0.9951867, -0.0047715316, 0.99533844, -0.096325345, 0.34203917, 0.69576025, -1.0157365)
+gizmo_extents = 0.035
+script = ExtResource("pose_handle")
+osso = &"LeftHandMiddle1"
+ajuste = Transform3D(0.9966957, 0.08081324, -0.008273898, -0.07953263, 0.9914748, 0.1032227, 0.016545001, -0.10222328, 0.994625, 0, 0, 0)
+
+[node name="Medio2" type="Marker3D" parent="PoseAdjustments/DedosEsquerdos" unique_id=1651177194]
+transform = Transform3D(0.9801784, 0.13744238, -0.14268398, 0.03710123, -0.8348146, -0.54927874, -0.19460894, 0.533098, -0.82336724, 0.34233776, 0.6913632, -0.97025156)
+gizmo_extents = 0.035
+script = ExtResource("pose_handle")
+osso = &"LeftHandMiddle2"
+
+[node name="Medio3" type="Marker3D" parent="PoseAdjustments/DedosEsquerdos" unique_id=1300955504]
+transform = Transform3D(0.9726503, 0.19179259, -0.13101824, 0.18168849, -0.9796523, -0.08526219, -0.14470506, 0.059125982, -0.9877066, 0.3472042, 0.66180444, -0.9513761)
+gizmo_extents = 0.035
+script = ExtResource("pose_handle")
+osso = &"LeftHandMiddle3"
+
+[node name="Anelar1" type="Marker3D" parent="PoseAdjustments/DedosEsquerdos" unique_id=1062235236]
+transform = Transform3D(0.9891739, 0.017522557, 0.14569378, 0.14213371, 0.13250428, -0.98093826, -0.036493532, 0.9910275, 0.12857942, 0.36665994, 0.69004595, -1.0203297)
+gizmo_extents = 0.035
+script = ExtResource("pose_handle")
+osso = &"LeftHandRing1"
+ajuste = Transform3D(0.9981946, 0.05926953, 0.009749302, -0.0600652, 0.9854155, 0.15921275, -0.00017076964, -0.15951109, 0.98719704, 0, 0, 0)
+
+[node name="Anelar2" type="Marker3D" parent="PoseAdjustments/DedosEsquerdos" unique_id=1748415373]
+transform = Transform3D(0.98879254, 0.14363492, -0.04070407, 0.08650632, -0.773457, -0.6279172, -0.1216737, 0.6173594, -0.77721465, 0.3673942, 0.69559777, -0.978806)
+gizmo_extents = 0.035
+script = ExtResource("pose_handle")
+osso = &"LeftHandRing2"
+ajuste = Transform3D(0.9998999, 0.0044952957, 0.013427655, -0.0032176003, 0.9955951, -0.093709245, -0.013789687, 0.09365653, 0.9955095, 0, 0, 0)
+
+[node name="Anelar3" type="Marker3D" parent="PoseAdjustments/DedosEsquerdos" unique_id=879857518]
+transform = Transform3D(0.97190714, 0.19450377, -0.13252752, 0.20252314, -0.978007, 0.049857177, -0.11991547, -0.07529637, -0.9899245, 0.37258857, 0.6676272, -0.9564802)
+gizmo_extents = 0.035
+script = ExtResource("pose_handle")
+osso = &"LeftHandRing3"
+ajuste = Transform3D(0.99775004, 0.045064647, 0.049638674, -0.029708575, 0.96092063, -0.2752277, -0.060102195, 0.2731333, 0.9600953, 0, 0, 0)
+
+[node name="Mindinho1" type="Marker3D" parent="PoseAdjustments/DedosEsquerdos" unique_id=1111940171]
+transform = Transform3D(0.9738225, -0.013015975, 0.22693408, 0.2258412, -0.057802625, -0.9724473, 0.02577483, 0.9982433, -0.05334995, 0.39036956, 0.6817316, -1.0261205)
+gizmo_extents = 0.035
+script = ExtResource("pose_handle")
+osso = &"LeftHandPinky1"
+
+[node name="Mindinho2" type="Marker3D" parent="PoseAdjustments/DedosEsquerdos" unique_id=1913036997]
+transform = Transform3D(0.94134104, -0.038156442, -0.33529058, -0.29013646, -0.5989047, -0.74641347, -0.17232676, 0.79991066, -0.5748447, 0.39000311, 0.6801044, -0.99801755)
+gizmo_extents = 0.035
+script = ExtResource("pose_handle")
+osso = &"LeftHandPinky2"
+
+[node name="Mindinho3" type="Marker3D" parent="PoseAdjustments/DedosEsquerdos" unique_id=2051403908]
+transform = Transform3D(0.8765551, 0.09862428, -0.47108698, -0.158154, -0.8654064, -0.47545543, -0.45457375, 0.4912679, -0.7429793, 0.38914928, 0.6667031, -0.9801187)
+gizmo_extents = 0.035
+script = ExtResource("pose_handle")
+osso = &"LeftHandPinky3"
+
+[node name="BracoDireito" type="Node3D" parent="PoseAdjustments" unique_id=1703349277]
+
+[node name="Ombro" type="Marker3D" parent="PoseAdjustments/BracoDireito" unique_id=1209739440]
+transform = Transform3D(0.013804618, -0.8567238, 0.5155905, 0.09876934, -0.51194936, -0.85331845, 0.9950146, 0.06270418, 0.07755086, -0.036698047, 1.0342913, -1.322282)
+gizmo_extents = 0.035
+script = ExtResource("pose_handle")
+osso = &"RightShoulder"
+
+[node name="Braco" type="Marker3D" parent="PoseAdjustments/BracoDireito" unique_id=1094263783]
+transform = Transform3D(-0.0089389235, -0.70149, 0.7126232, -0.20675188, -0.6959559, -0.68767655, 0.97835255, -0.15348336, -0.13881317, -0.13855901, 0.973423, -1.3148267)
+gizmo_extents = 0.035
+script = ExtResource("pose_handle")
+osso = &"RightArm"
+
+[node name="Antebraco" type="Marker3D" parent="PoseAdjustments/BracoDireito" unique_id=874660200]
+transform = Transform3D(0.5215264, -0.0882142, 0.84866256, 0.7793916, -0.35550672, -0.51591057, 0.34721598, 0.9305017, -0.11665256, -0.3385737, 0.7749865, -1.3585892)
+gizmo_extents = 0.035
+script = ExtResource("pose_handle")
+osso = &"RightForeArm"
+
+[node name="Pulso" type="Marker3D" parent="PoseAdjustments/BracoDireito" unique_id=1838399985]
+transform = Transform3D(0.99999964, 8.195639e-08, -2.9802322e-08, 4.260944e-08, -7.450581e-09, -0.9999998, 1.15253926e-07, 0.99999994, 9.685755e-08, -0.36080098, 0.6854086, -1.1241287)
+gizmo_extents = 0.035
+script = ExtResource("pose_handle")
+osso = &"RightHand"
+
+[node name="DedosDireitos" type="Node3D" parent="PoseAdjustments" unique_id=1813347882]
+
+[node name="Polegar1" type="Marker3D" parent="PoseAdjustments/DedosDireitos" unique_id=446919421]
+transform = Transform3D(0.7425809, 0.6239199, -0.24350919, -0.15331215, -0.1955758, -0.96863043, -0.65197253, 0.75662, -0.04957635, -0.32844514, 0.6802354, -1.0977767)
+gizmo_extents = 0.035
+script = ExtResource("pose_handle")
+osso = &"RightHandThumb1"
+ajuste = Transform3D(0.9995162, 0.011805306, 0.028773637, -0.010806354, 0.9993423, -0.0346412, -0.029163258, 0.034313887, 0.9989869, 0, 0, 0)
+
+[node name="Polegar2" type="Marker3D" parent="PoseAdjustments/DedosDireitos" unique_id=846420069]
+transform = Transform3D(0.86046356, -0.009160455, -0.50942916, -0.4919739, -0.27500364, -0.8260353, -0.13252783, 0.96139956, -0.24113742, -0.30262566, 0.672142, -1.0664661)
+gizmo_extents = 0.035
+script = ExtResource("pose_handle")
+osso = &"RightHandThumb2"
+
+[node name="Polegar3" type="Marker3D" parent="PoseAdjustments/DedosDireitos" unique_id=963941875]
+transform = Transform3D(0.89675885, -0.39451888, -0.20044413, -0.35193345, -0.3612339, -0.8635118, 0.26826486, 0.8449052, -0.46278417, -0.302905, 0.66375816, -1.0371565)
+gizmo_extents = 0.035
+script = ExtResource("pose_handle")
+osso = &"RightHandThumb3"
+ajuste = Transform3D(0.98338354, -0.16496316, 0.07578173, 0.16978535, 0.9835097, -0.06229961, -0.06425442, 0.074130885, 0.99517643, 0, 0, 0)
+
+[node name="Indicador1" type="Marker3D" parent="PoseAdjustments/DedosDireitos" unique_id=236283199]
+transform = Transform3D(0.99408644, 0.10707459, -0.018066794, -0.015796531, -0.022012405, -0.9996326, -0.107432805, 0.9940073, -0.020190723, -0.32545468, 0.6923605, -1.0266746)
+gizmo_extents = 0.035
+script = ExtResource("pose_handle")
+osso = &"RightHandIndex1"
+ajuste = Transform3D(0.9960016, 0.08906841, -0.0069490923, -0.088634506, 0.9949038, 0.048062123, 0.01119451, -0.04725384, 0.99881995, 0, 0, 0)
+
+[node name="Indicador2" type="Marker3D" parent="PoseAdjustments/DedosDireitos" unique_id=771677988]
+transform = Transform3D(0.9942607, -0.10101985, 0.03520902, -0.060412344, -0.8018054, -0.5945231, 0.08828968, 0.58898425, -0.8033071, -0.3206707, 0.6913773, -0.98226374)
+gizmo_extents = 0.035
+script = ExtResource("pose_handle")
+osso = &"RightHandIndex2"
+ajuste = Transform3D(0.9999992, 0.00075935945, 0.0022583583, -0.00080896844, 0.9997554, 0.022139171, -0.002240932, -0.022142282, 0.99975216, 0, 0, 0)
+
+[node name="Indicador3" type="Marker3D" parent="PoseAdjustments/DedosDireitos" unique_id=9182272]
+transform = Transform3D(0.9555314, -0.1346447, -0.262354, -0.1703934, -0.978217, -0.11855933, -0.2406758, 0.15799057, -0.95766044, -0.32353422, 0.6686493, -0.96556854)
+gizmo_extents = 0.035
+script = ExtResource("pose_handle")
+osso = &"RightHandIndex3"
+ajuste = Transform3D(0.8939724, 0.024307888, -0.44746727, -0.09686029, 0.985406, -0.13998063, 0.43753186, 0.16847998, 0.88327765, 0, 0, 0)
+
+[node name="Medio1" type="Marker3D" parent="PoseAdjustments/DedosDireitos" unique_id=29272461]
+transform = Transform3D(0.9911213, 0.13024956, -0.026697515, -0.024706531, -0.016877674, -0.99955195, -0.1306417, 0.9913375, -0.013509728, -0.35160223, 0.6888927, -1.0239309)
+gizmo_extents = 0.035
+script = ExtResource("pose_handle")
+osso = &"RightHandMiddle1"
+ajuste = Transform3D(0.9984168, 0.05624303, -0.0009104968, -0.056241643, 0.99841636, 0.0014169344, 0.0009887953, -0.001363441, 0.99999905, 0, 0, 0)
+
+[node name="Medio2" type="Marker3D" parent="PoseAdjustments/DedosDireitos" unique_id=1368735006]
+transform = Transform3D(0.99962366, -0.026393317, 0.0074282307, -0.011462155, -0.64836794, -0.76124054, 0.024908073, 0.7608693, -0.64842683, -0.34565, 0.68812156, -0.9786291)
+gizmo_extents = 0.035
+script = ExtResource("pose_handle")
+osso = &"RightHandMiddle2"
+
+[node name="Medio3" type="Marker3D" parent="PoseAdjustments/DedosDireitos" unique_id=1051593824]
+transform = Transform3D(0.99407876, -0.0965197, -0.04990461, -0.10576689, -0.964775, -0.24087769, -0.02489712, 0.24472976, -0.9692715, -0.34658447, 0.6651646, -0.95168847)
+gizmo_extents = 0.035
+script = ExtResource("pose_handle")
+osso = &"RightHandMiddle3"
+
+[node name="Anelar1" type="Marker3D" parent="PoseAdjustments/DedosDireitos" unique_id=1774542916]
+transform = Transform3D(0.98320764, 0.10436402, -0.14969933, -0.14887628, -0.015676327, -0.9887313, -0.105534546, 0.9944154, 0.00012432784, -0.376223, 0.6831789, -1.0285245)
+gizmo_extents = 0.035
+script = ExtResource("pose_handle")
+osso = &"RightHandRing1"
+ajuste = Transform3D(1.0000002, 2.2724271e-07, 1.5646219e-07, 1.3504177e-08, 0.9999995, 6.7055225e-08, 1.6763806e-08, -1.1175871e-07, 1.0000005, 0, 0, 0)
+
+[node name="Anelar2" type="Marker3D" parent="PoseAdjustments/DedosDireitos" unique_id=1806555950]
+transform = Transform3D(0.9955417, -0.021864332, -0.09174742, -0.090906456, -0.48165113, -0.8716351, -0.025132336, 0.8760903, -0.4814915, -0.37185013, 0.68252206, -0.986858)
+gizmo_extents = 0.035
+script = ExtResource("pose_handle")
+osso = &"RightHandRing2"
+ajuste = Transform3D(0.9999568, 0.0090253325, -0.0026300186, -0.009241143, 0.995038, -0.099091314, 0.0017228543, 0.099111855, 0.9950758, 0, 0, 0)
+
+[node name="Anelar3" type="Marker3D" parent="PoseAdjustments/DedosDireitos" unique_id=1246929814]
+transform = Transform3D(0.99558556, -0.06398809, -0.06865783, -0.07465254, -0.9832763, -0.16611491, -0.056880075, 0.17050745, -0.98371327, -0.37264082, 0.66510427, -0.9551764)
+gizmo_extents = 0.035
+script = ExtResource("pose_handle")
+osso = &"RightHandRing3"
+ajuste = Transform3D(0.9984536, 0.027673265, -0.04821222, -0.050038625, 0.8251743, -0.5626588, 0.024213312, 0.5642032, 0.82528025, 0, 0, 0)
+
+[node name="Mindinho1" type="Marker3D" parent="PoseAdjustments/DedosDireitos" unique_id=21939853]
+transform = Transform3D(0.97388357, 0.06795818, -0.2166375, -0.22603357, 0.20016778, -0.95333153, -0.02142264, 0.97740185, 0.21030107, -0.3999327, 0.674865, -1.0343152)
+gizmo_extents = 0.035
+script = ExtResource("pose_handle")
+osso = &"RightHandPinky1"
+
+[node name="Mindinho2" type="Marker3D" parent="PoseAdjustments/DedosDireitos" unique_id=2060404409]
+transform = Transform3D(0.94282204, -0.03817464, 0.33110213, 0.31334475, -0.23701993, -0.91958475, 0.11358282, 0.9707543, -0.21150577, -0.39801955, 0.68050003, -1.0067992)
+gizmo_extents = 0.035
+script = ExtResource("pose_handle")
+osso = &"RightHandPinky2"
+
+[node name="Mindinho3" type="Marker3D" parent="PoseAdjustments/DedosDireitos" unique_id=1435790841]
+transform = Transform3D(0.87712485, -0.08900483, 0.471942, 0.38473403, -0.45795098, -0.80141115, 0.28745607, 0.88451034, -0.36743698, -0.39887387, 0.67519677, -0.98507774)
+gizmo_extents = 0.035
+script = ExtResource("pose_handle")
+osso = &"RightHandPinky3"
+
+[node name="ChairCameraTargets" type="Node3D" parent="." unique_id=1941149900]
+script = ExtResource("anchor_targets")
+ancora = NodePath("../OfficeChair")
+
+[node name="SeatedView" type="Marker3D" parent="ChairCameraTargets" unique_id=897213954]
+transform = Transform3D(-1, 5.5126606e-08, -3.211443e-07, 0, 0.9855848, 0.16918235, 3.2584137e-07, 0.16918235, -0.9855848, 0, 1.2549657, -1.0519718)
+gizmo_extents = 0.08
+
+[node name="StandingView" type="Marker3D" parent="ChairCameraTargets" unique_id=1156029856]
+transform = Transform3D(-1, 5.5126606e-08, -3.211443e-07, 0, 0.9855848, 0.16918235, 3.2584137e-07, 0.16918235, -0.9855848, 0.004751, 1.62, -0.5880384)
+gizmo_extents = 0.08

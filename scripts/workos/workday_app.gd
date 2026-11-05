@@ -35,87 +35,63 @@ func button(text: String, callback: Callable, parent: Node = null) -> Button:
 	return item
 
 func _render() -> void:
-	for child in get_children():
-		remove_child(child)
+	for child in $Phase.get_children():
+		$Phase.remove_child(child)
 		child.queue_free()
 	phase = str(game.career.get("phase", "menu"))
 	bars.clear()
 	task_signature = ""
 	event_signature = ""
-	if phase == "menu" or phase in ["burnout", "won", "resigned"]:
-		label("PORTAL RH · WORKDAY LTDA.")
-		label("Arquive documentos no setor correto e resolva pendências antes do prazo.\nA carreira tem 25 dias mínimos até CEO. O expediente dura quatro minutos.")
-		if phase != "menu": label({"burnout": "Carreira encerrada por burnout.", "won": "Você chegou a CEO!", "resigned": "Demissão registrada."}[phase])
-		label("Saldo: R$ %d   Recorde: %d" % [game.profile.wallet, game.profile.best])
-		var difficulty := OptionButton.new()
-		for name in ["Fácil", "Normal", "Difícil", "Burnout"]: difficulty.add_item(name)
-		difficulty.selected = ["facil", "normal", "dificil", "burnout"].find(game.profile.difficulty)
-		add_child(difficulty)
-		difficulty.item_selected.connect(func(index: int) -> void:
-			game.profile.difficulty = ["facil", "normal", "dificil", "burnout"][index]
-			game.save_game())
-		button("Iniciar nova carreira", func() -> void: game.new_career(); _render())
-		return
-	if phase == "ready" or phase == "ended":
-		label("EXPEDIENTE · DIA %d" % (game.day() + (1 if phase == "ended" else 0)))
-		if phase == "ended":
-			var summary: Dictionary = game.career.summary
-			label("Dia concluído\nPontuação: %d\nSalário: R$ %d\nEstresse: %d%%\nCargo: %s" % [summary.points, summary.pay, summary.stress, game.texts().ranks[int(summary.rank)]])
-		label("Setas: mover documento · Espaço: acelerar queda · Delete: descartar\nEsc: planilha/pausa · Pendências: mouse e teclado")
-		button("Começar expediente", func() -> void: game.start_day(); _render())
-		button("Abrir calendário", func() -> void: desktop.open_app("calendar"))
-		return
-	if phase == "promotion":
-		label("PROMOÇÃO: " + str(game.texts().ranks[int(game.career.rank)]))
-		label("Escolha um benefício permanente para esta carreira:")
-		var scroll := ScrollContainer.new()
-		scroll.size_flags_vertical = SIZE_EXPAND_FILL
-		add_child(scroll)
-		var list := VBoxContainer.new()
-		list.size_flags_horizontal = SIZE_EXPAND_FILL
-		scroll.add_child(list)
-		for id in game.data.perks:
-			if id in game.career.perks: continue
-			var description: Variant = game.texts().get("perks", {}).get(id, [id, ""])
-			var title := str(description[0]) + " — " + str(description[1]) if description is Array else str(description)
-			button(title, func() -> void: game.choose_perk(id); _render(), list)
-		return
-	hud = label("")
-	var toolbar := HBoxContainer.new()
-	add_child(toolbar)
-	button("Pausar / continuar", func() -> void: game.paused = not game.paused, toolbar)
-	button("Planilha", func() -> void:
-		if game.events.has("boss"): game.dodge_boss()
-		else: game.paused = not game.paused, toolbar)
-	button("Café", func() -> void: game.use_coffee(), toolbar)
-	button("WorkOS", func() -> void: game.paused = true; desktop.open_app("calendar"), toolbar)
-	var body := HBoxContainer.new()
-	body.size_flags_vertical = SIZE_EXPAND_FILL
-	add_child(body)
-	var left := VBoxContainer.new()
-	left.size_flags_horizontal = SIZE_EXPAND_FILL
-	body.add_child(left)
-	var board := BOARD.new()
-	board.game = game
-	left.add_child(board)
-	var controls := HBoxContainer.new()
-	left.add_child(controls)
-	button("←", func() -> void: game.move_file(int(game.file.lane) - 1), controls)
-	button("Soltar", func() -> void: game.fast = true, controls)
-	button("→", func() -> void: game.move_file(int(game.file.lane) + 1), controls)
-	button("Excluir", game.delete_file, controls)
-	button("Pegar café", func() -> void: game.use_coffee(true), controls)
-	event_box = VBoxContainer.new()
-	left.add_child(event_box)
-	var scroll := ScrollContainer.new()
-	scroll.custom_minimum_size.x = 370
-	scroll.size_flags_vertical = SIZE_EXPAND_FILL
-	body.add_child(scroll)
-	task_box = VBoxContainer.new()
-	task_box.size_flags_horizontal = SIZE_EXPAND_FILL
-	scroll.add_child(task_box)
-	status = label("Organize as bandejas e acompanhe os prazos.")
-	_refresh()
+	var screen_id := "day"
+	if phase == "menu" or phase in ["burnout", "won", "resigned"]: screen_id = "menu"
+	elif phase in ["ready", "ended"]: screen_id = "summary"
+	elif phase == "promotion": screen_id = "promotion"
+	var screen: VBoxContainer = load("res://scenes/workos/phases/%s.tscn" % screen_id).instantiate()
+	$Phase.add_child(screen)
+	match screen_id:
+		"menu":
+			if phase != "menu": screen.get_node("Result").text = {"burnout": "Carreira encerrada por burnout.", "won": "Você chegou a CEO!", "resigned": "Demissão registrada."}[phase]
+			screen.get_node("Wallet").text = "Saldo: R$ %d   Recorde: %d" % [game.profile.wallet, game.profile.best]
+			var difficulty: OptionButton = screen.get_node("Difficulty")
+			for name in ["Fácil", "Normal", "Difícil", "Burnout"]: difficulty.add_item(name)
+			difficulty.selected = ["facil", "normal", "dificil", "burnout"].find(game.profile.difficulty)
+			difficulty.item_selected.connect(func(index: int) -> void:
+				game.profile.difficulty = ["facil", "normal", "dificil", "burnout"][index]
+				game.save_game())
+			screen.get_node("Start").pressed.connect(func() -> void: game.new_career(); _render())
+		"summary":
+			screen.get_node("Title").text = "EXPEDIENTE · DIA %d" % (game.day() + (1 if phase == "ended" else 0))
+			screen.get_node("Summary").visible = phase == "ended"
+			if phase == "ended":
+				var summary: Dictionary = game.career.summary
+				screen.get_node("Summary").text = "Dia concluído\nPontuação: %d\nSalário: R$ %d\nEstresse: %d%%\nCargo: %s" % [summary.points, summary.pay, summary.stress, game.texts().ranks[int(summary.rank)]]
+			screen.get_node("Start").pressed.connect(func() -> void: game.start_day(); _render())
+			screen.get_node("Calendar").pressed.connect(func() -> void: desktop.open_app("calendar"))
+		"promotion":
+			screen.get_node("Title").text = "PROMOÇÃO: " + str(game.texts().ranks[int(game.career.rank)])
+			for id in game.data.perks:
+				if id in game.career.perks: continue
+				var description: Variant = game.texts().get("perks", {}).get(id, [id, ""])
+				var title := str(description[0]) + " — " + str(description[1]) if description is Array else str(description)
+				button(title, func() -> void: game.choose_perk(id); _render(), screen.get_node("Scroll/Benefits"))
+		"day":
+			hud = screen.get_node("HUD")
+			screen.get_node("Toolbar/Pause").pressed.connect(func() -> void: game.paused = not game.paused)
+			screen.get_node("Toolbar/Spreadsheet").pressed.connect(func() -> void:
+				if game.events.has("boss"): game.dodge_boss()
+				else: game.paused = not game.paused)
+			screen.get_node("Toolbar/Coffee").pressed.connect(func() -> void: game.use_coffee())
+			screen.get_node("Toolbar/Desktop").pressed.connect(func() -> void: game.paused = true; desktop.open_app("calendar"))
+			screen.get_node("Body/Left/Board").game = game
+			screen.get_node("Body/Left/Controls/Left").pressed.connect(func() -> void: game.move_file(int(game.file.lane) - 1))
+			screen.get_node("Body/Left/Controls/Right").pressed.connect(func() -> void: game.move_file(int(game.file.lane) + 1))
+			screen.get_node("Body/Left/Controls/Drop").pressed.connect(func() -> void: game.fast = true)
+			screen.get_node("Body/Left/Controls/Delete").pressed.connect(game.delete_file)
+			screen.get_node("Body/Left/Controls/Coffee").pressed.connect(func() -> void: game.use_coffee(true))
+			event_box = screen.get_node("Body/Left/Events")
+			task_box = screen.get_node("Body/TaskScroll/Tasks")
+			status = screen.get_node("Status")
+			_refresh()
 
 func _process(delta: float) -> void:
 	if game == null: return
@@ -152,13 +128,11 @@ func _build_tasks() -> void:
 	bars.clear()
 	for task in game.tasks:
 		var id := int(task.id)
-		var panel := VBoxContainer.new()
-		task_box.add_child(panel)
-		label(str(task.text) if not task.text.is_empty() else str(task.type).capitalize(), panel)
-		var timer := ProgressBar.new()
-		timer.custom_minimum_size.y = 12
-		timer.show_percentage = false
-		panel.add_child(timer)
+		var card: VBoxContainer = preload("res://scenes/workos/components/task_card.tscn").instantiate()
+		task_box.add_child(card)
+		card.get_node("Title").text = str(task.text) if not task.text.is_empty() else str(task.type).capitalize()
+		var panel: VBoxContainer = card.get_node("Actions")
+		var timer: ProgressBar = card.get_node("Deadline")
 		bars[id] = timer
 		match task.type:
 			"button", "email":
@@ -185,7 +159,6 @@ func _build_tasks() -> void:
 				label("Pressione %s, %d vezes" % [" / ".join(task.keys), task.need], panel)
 				for key in task.keys: button(key, game.task_action.bind(id, key), panel)
 			"video": button("Aceitar reunião", game.task_action.bind(id, ""), panel)
-		panel.add_child(HSeparator.new())
 
 func _build_events() -> void:
 	for child in event_box.get_children():

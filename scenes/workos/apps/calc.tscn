@@ -1,0 +1,145 @@
+[gd_scene format=3]
+
+[ext_resource type="Theme" path="res://scenes/workos/theme.tres" id="theme"]
+
+[node name="Calc" type="VBoxContainer"]
+offset_right = 580.0
+offset_bottom = 350.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme = ExtResource("theme")
+theme_override_constants/separation = 10
+
+[node name="Heading" type="Label" parent="."]
+layout_mode = 2
+text = "CALCULADORA"
+
+[node name="Display" type="LineEdit" parent="."]
+layout_mode = 2
+placeholder_text = "0"
+alignment = 2
+
+[node name="Keys" type="GridContainer" parent="."]
+layout_mode = 2
+columns = 4
+size_flags_vertical = 3
+
+[node name="Key0" type="Button" parent="Keys"]
+layout_mode = 2
+text = "C"
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Key1" type="Button" parent="Keys"]
+layout_mode = 2
+text = "⌫"
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Key2" type="Button" parent="Keys"]
+layout_mode = 2
+text = "("
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Key3" type="Button" parent="Keys"]
+layout_mode = 2
+text = ")"
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Key4" type="Button" parent="Keys"]
+layout_mode = 2
+text = "7"
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Key5" type="Button" parent="Keys"]
+layout_mode = 2
+text = "8"
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Key6" type="Button" parent="Keys"]
+layout_mode = 2
+text = "9"
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Key7" type="Button" parent="Keys"]
+layout_mode = 2
+text = "/"
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Key8" type="Button" parent="Keys"]
+layout_mode = 2
+text = "4"
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Key9" type="Button" parent="Keys"]
+layout_mode = 2
+text = "5"
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Key10" type="Button" parent="Keys"]
+layout_mode = 2
+text = "6"
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Key11" type="Button" parent="Keys"]
+layout_mode = 2
+text = "*"
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Key12" type="Button" parent="Keys"]
+layout_mode = 2
+text = "1"
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Key13" type="Button" parent="Keys"]
+layout_mode = 2
+text = "2"
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Key14" type="Button" parent="Keys"]
+layout_mode = 2
+text = "3"
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Key15" type="Button" parent="Keys"]
+layout_mode = 2
+text = "-"
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Key16" type="Button" parent="Keys"]
+layout_mode = 2
+text = "0"
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Key17" type="Button" parent="Keys"]
+layout_mode = 2
+text = "."
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Key18" type="Button" parent="Keys"]
+layout_mode = 2
+text = "="
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Key19" type="Button" parent="Keys"]
+layout_mode = 2
+text = "+"
+size_flags_horizontal = 3
+size_flags_vertical = 3

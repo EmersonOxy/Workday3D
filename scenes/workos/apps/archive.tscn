@@ -1,0 +1,42 @@
+[gd_scene format=3]
+
+[ext_resource type="Theme" path="res://scenes/workos/theme.tres" id="theme"]
+
+[node name="Archive" type="VBoxContainer"]
+offset_right = 860.0
+offset_bottom = 500.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme = ExtResource("theme")
+theme_override_constants/separation = 10
+
+[node name="Heading" type="Label" parent="."]
+layout_mode = 2
+text = "ARQUIVO · COLEÇÕES"
+
+[node name="Tabs" type="HBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="quests" type="Button" parent="Tabs"]
+layout_mode = 2
+text = "Missões"
+
+[node name="pins" type="Button" parent="Tabs"]
+layout_mode = 2
+text = "Broches"
+
+[node name="unlocks" type="Button" parent="Tabs"]
+layout_mode = 2
+text = "Desbloqueios"
+
+[node name="ach" type="Button" parent="Tabs"]
+layout_mode = 2
+text = "Conquistas"
+
+[node name="Scroll" type="ScrollContainer" parent="."]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="List" type="VBoxContainer" parent="Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3

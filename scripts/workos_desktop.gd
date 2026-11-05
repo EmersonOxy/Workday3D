@@ -2,11 +2,9 @@ extends Control
 
 signal exit_requested
 
-const WINDOW_SCRIPT := preload("res://scripts/workos_window.gd")
 const MUSIC_SCRIPT := preload("res://scripts/workos_music.gd")
 const GAME_SCRIPT := preload("res://scripts/workos/game_state.gd")
 const SOCIAL_SCRIPT := preload("res://scripts/workos/social_state.gd")
-const WORKDAY_SCRIPT := preload("res://scripts/workos/workday_app.gd")
 const APPS := preload("res://scripts/workos/apps.gd")
 const SAVE_PATH := "user://workos.cfg"
 const WALLPAPERS := ["cerejeira-luar", "deserto-por-do-sol", "espaco-terra", "farol-por-do-sol", "lago-primavera", "outono-dourado", "planeta-aneis", "praia-tropical"]
@@ -77,8 +75,7 @@ func open_app(id: String) -> void:
 		windows[id].show()
 		_focus(id)
 		return
-	var window := PanelContainer.new()
-	window.set_script(WINDOW_SCRIPT)
+	var window: PanelContainer = preload("res://scenes/workos/window.tscn").instantiate()
 	$Windows.add_child(window)
 	window.configure(TITLES[id])
 	if id == "music": window.size = Vector2(660, 560)
@@ -106,24 +103,20 @@ func open_app(id: String) -> void:
 		else:
 			window.show()
 			_focus(id))
+	var app: Control = load("res://scenes/workos/apps/%s.tscn" % id).instantiate()
+	window.content.add_child(app)
 	match id:
-		"workday":
-			var app := WORKDAY_SCRIPT.new()
-			window.content.add_child(app)
-			app.setup(game, self)
-		"calendar": APPS.calendar(window.content, game)
-		"archive": APPS.archive(window.content, game)
-		"messenger": APPS.messenger(window.content, social)
-		"profile": APPS.profile(window.content, game)
-		"backup": APPS.backup(window.content, game)
-		"notes": _build_notes(window.content)
-		"calc": _build_calculator(window.content)
-		"settings": _build_settings(window.content)
-		"music": music.build_ui(window.content)
-		"about":
-			var label := Label.new()
-			label.text = "WorkOS\n\nÁrea de trabalho do Workday.\n\nNotas • Calculadora • Wallpapers\n\nArraste uma janela pela barra de título.\nUse os botões para minimizar ou maximizar.\n\nEsc / Voltar: retornar à cadeira."
-			window.content.add_child(label)
+		"workday": app.setup(game, self)
+		"calendar": APPS.calendar(app, game)
+		"archive": APPS.archive(app, game)
+		"messenger": APPS.messenger(app, social)
+		"profile": APPS.profile(app, game)
+		"backup": APPS.backup(app, game)
+		"notes": _build_notes(app)
+		"calc": _build_calculator(app)
+		"settings": _build_settings(app)
+		"music": music.build_ui(app)
+
 	_focus(id)
 
 func _focus(id: String) -> void:
@@ -151,15 +144,9 @@ func _close(id: String) -> void:
 	if current_app == id: current_app = ""
 
 func _build_notes(parent: Control) -> void:
-	notes_editor = TextEdit.new()
-	notes_editor.placeholder_text = "Escreva suas notas..."
+	notes_editor = parent.get_node("Editor")
 	notes_editor.text = str(settings.get_value("notes", "text", ""))
-	notes_editor.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	parent.add_child(notes_editor)
 	notes_editor.text_changed.connect(func() -> void: save_timer.start())
-	var hint := Label.new()
-	hint.text = "Salvamento automático"
-	parent.add_child(hint)
 	notes_editor.grab_focus()
 
 func _save_notes() -> void:
@@ -171,22 +158,10 @@ func _exit_tree() -> void:
 	_save_notes()
 
 func _build_calculator(parent: Control) -> void:
-	var display := LineEdit.new()
-	display.placeholder_text = "0"
-	display.alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	parent.add_child(display)
+	var display: LineEdit = parent.get_node("Display")
 	display.text_submitted.connect(func(_text: String) -> void: _calculate(display))
-	var grid := GridContainer.new()
-	grid.columns = 4
-	grid.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	parent.add_child(grid)
-	for key in ["C", "⌫", "(", ")", "7", "8", "9", "/", "4", "5", "6", "*", "1", "2", "3", "-", "0", ".", "=", "+"]:
-		var button := Button.new()
-		button.text = key
-		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		button.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		grid.add_child(button)
-		button.pressed.connect(_calculator_key.bind(key, display))
+	for button in parent.get_node("Keys").get_children():
+		button.pressed.connect(_calculator_key.bind(button.text, display))
 
 func _calculator_key(key: String, display: LineEdit) -> void:
 	match key:
@@ -208,20 +183,12 @@ func _calculate(display: LineEdit) -> void:
 	display.text = "Erro" if expression.has_execute_failed() else str(result)
 
 func _build_settings(parent: Control) -> void:
-	var label := Label.new()
-	label.text = "Papel de parede"
-	parent.add_child(label)
-	var options := OptionButton.new()
+	var options: OptionButton = parent.get_node("Wallpapers")
 	for wall in WALLPAPERS: options.add_item(wall.replace("-", " ").capitalize())
 	options.selected = maxi(0, WALLPAPERS.find(str(settings.get_value("desktop", "wallpaper", "lago-primavera"))))
 	options.item_selected.connect(func(index: int) -> void: _set_wallpaper(WALLPAPERS[index]))
-	parent.add_child(options)
-	var preview := TextureRect.new()
+	var preview: TextureRect = parent.get_node("Preview")
 	preview.texture = $Wallpaper.texture
-	preview.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	preview.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	preview.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	parent.add_child(preview)
 	options.item_selected.connect(func(_index: int) -> void: preview.texture = $Wallpaper.texture)
 
 func _set_wallpaper(id: String, persist := true) -> void:

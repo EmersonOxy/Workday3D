@@ -1,0 +1,68 @@
+{
+	"from_type": {
+		"loop": false,
+		"mapped_bones": 65,
+		"seconds": 0.933333333333333,
+		"travel": "(0.0, 0.0, 0.0)"
+	},
+	"idle": {
+		"loop": true,
+		"mapped_bones": 65,
+		"seconds": 8.33333333333333,
+		"travel": "(0.0, 0.0, 0.0)"
+	},
+	"sit_down": {
+		"loop": false,
+		"mapped_bones": 65,
+		"seconds": 2.23333333333333,
+		"travel": "(-0.002032, 0.0, -0.474153)"
+	},
+	"sit_idle": {
+		"loop": true,
+		"mapped_bones": 65,
+		"seconds": 4.3,
+		"travel": "(0.0, 0.0, 0.0)"
+	},
+	"stand_up": {
+		"loop": false,
+		"mapped_bones": 65,
+		"seconds": 2.26666666666667,
+		"travel": "(0.004751, 0.0, 0.468565)"
+	},
+	"strafe_left": {
+		"loop": true,
+		"mapped_bones": 65,
+		"seconds": 1.03333333333333,
+		"travel": "(1.7488, 0.0, 0.0)"
+	},
+	"strafe_right": {
+		"loop": true,
+		"mapped_bones": 65,
+		"seconds": 1.03333333333333,
+		"travel": "(-1.7488, 0.0, -0.0)"
+	},
+	"to_type": {
+		"loop": false,
+		"mapped_bones": 65,
+		"seconds": 1.2,
+		"travel": "(0.000854, 0.0, -0.000236)"
+	},
+	"typing": {
+		"loop": true,
+		"mapped_bones": 65,
+		"seconds": 16.4666666666667,
+		"travel": "(0.000001, 0.0, 0.000017)"
+	},
+	"walk": {
+		"loop": true,
+		"mapped_bones": 65,
+		"seconds": 1.16666666666667,
+		"travel": "(-0.0, 0.0, 1.78351)"
+	},
+	"walk_start": {
+		"loop": false,
+		"mapped_bones": 65,
+		"seconds": 2.93333333333333,
+		"travel": "(-0.028878, 0.0, 1.940887)"
+	}
+}

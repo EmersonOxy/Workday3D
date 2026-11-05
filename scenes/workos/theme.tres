@@ -1,0 +1,59 @@
+[gd_resource type="Theme" format=3 uid="uid://cp3l4dr7akxdi"]
+
+[ext_resource type="FontFile" uid="uid://c6diphleb0phb" path="res://assets/fonts/VT323.ttf" id="font"]
+[ext_resource type="Texture2D" uid="uid://b08vhe3r32sg2" path="res://assets/ui/workos/task-button-active.png" id="tex3"]
+[ext_resource type="Texture2D" uid="uid://bpub5fr2dcdv3" path="res://assets/ui/workos/dialog-button.png" id="tex4"]
+[ext_resource type="Texture2D" uid="uid://c42do5ckowrsg" path="res://assets/ui/workos/window-paper.png" id="tex5"]
+
+[sub_resource type="StyleBoxTexture" id="button"]
+content_margin_left = 11.0
+content_margin_top = 11.0
+content_margin_right = 11.0
+content_margin_bottom = 11.0
+texture = ExtResource("tex4")
+texture_margin_left = 7.0
+texture_margin_top = 7.0
+texture_margin_right = 7.0
+texture_margin_bottom = 7.0
+
+[sub_resource type="StyleBoxTexture" id="pressed"]
+content_margin_left = 12.0
+content_margin_top = 12.0
+content_margin_right = 12.0
+content_margin_bottom = 12.0
+texture = ExtResource("tex3")
+texture_margin_left = 8.0
+texture_margin_top = 8.0
+texture_margin_right = 8.0
+texture_margin_bottom = 8.0
+
+[sub_resource type="StyleBoxTexture" id="paper"]
+content_margin_left = 16.0
+content_margin_top = 16.0
+content_margin_right = 16.0
+content_margin_bottom = 16.0
+texture = ExtResource("tex5")
+texture_margin_left = 12.0
+texture_margin_top = 12.0
+texture_margin_right = 12.0
+texture_margin_bottom = 12.0
+
+[resource]
+default_font = ExtResource("font")
+default_font_size = 28
+Button/colors/font_color = Color(0.16, 0.12, 0.18, 1)
+Button/colors/font_hover_color = Color(0.16, 0.12, 0.18, 1)
+Button/colors/font_pressed_color = Color(0.16, 0.12, 0.18, 1)
+Button/styles/hover = SubResource("button")
+Button/styles/normal = SubResource("button")
+Button/styles/pressed = SubResource("pressed")
+Label/colors/font_color = Color(0.16, 0.12, 0.18, 1)
+LineEdit/colors/font_color = Color(0.16, 0.12, 0.18, 1)
+LineEdit/styles/focus = SubResource("paper")
+LineEdit/styles/normal = SubResource("paper")
+OptionButton/colors/font_color = Color(0.16, 0.12, 0.18, 1)
+OptionButton/styles/normal = SubResource("button")
+TextEdit/colors/caret_color = Color(0.16, 0.12, 0.18, 1)
+TextEdit/colors/font_color = Color(0.16, 0.12, 0.18, 1)
+TextEdit/styles/focus = SubResource("paper")
+TextEdit/styles/normal = SubResource("paper")

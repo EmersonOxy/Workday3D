@@ -1,0 +1,53 @@
+[gd_scene format=3]
+
+[ext_resource type="Theme" path="res://scenes/workos/theme.tres" id="theme"]
+
+[node name="Music" type="VBoxContainer"]
+offset_right = 600.0
+offset_bottom = 460.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme = ExtResource("theme")
+theme_override_constants/separation = 10
+
+[node name="Heading" type="Label" parent="."]
+layout_mode = 2
+text = "MÚSICA"
+
+[node name="Now" type="Label" parent="."]
+layout_mode = 2
+text = "Som desligado"
+autowrap_mode = 3
+
+[node name="Sound" type="CheckButton" parent="."]
+layout_mode = 2
+text = "Reproduzir música"
+
+[node name="Tracks" type="VBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="Track0" type="CheckBox" parent="Tracks"]
+layout_mode = 2
+text = "Café das Nove"
+
+[node name="Track1" type="CheckBox" parent="Tracks"]
+layout_mode = 2
+text = "Elevador Panorâmico"
+
+[node name="Track2" type="CheckBox" parent="Tracks"]
+layout_mode = 2
+text = "Relatório ao Pôr do Sol"
+
+[node name="Track3" type="CheckBox" parent="Tracks"]
+layout_mode = 2
+text = "Planilha em Loop"
+
+[node name="Volume" type="HSlider" parent="."]
+layout_mode = 2
+max_value = 1.0
+step = 0.01
+value = 0.6
+
+[node name="Next" type="Button" parent="."]
+layout_mode = 2
+text = "Próxima faixa"
