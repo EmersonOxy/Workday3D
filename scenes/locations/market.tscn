@@ -125,6 +125,9 @@ size = Vector3(5, 3.2, 0.2)
 [sub_resource type="SphereShape3D" id="TRIGGER47"]
 radius = 1.35
 
+[sub_resource type="BoxShape3D" id="CollisionPortaMercado"]
+size = Vector3(1.4, 2.3, 0.14)
+
 [node name="Mercado" type="Node3D"]
 
 [node name="Sun" type="DirectionalLight3D" parent="."]
@@ -271,12 +274,16 @@ position = Vector3(-3.5, 1.25, 3.1)
 mesh = SubResource("MESH37")
 material_override = SubResource("MAT39")
 
-[node name="PortaMercado" type="Node3D" parent="."]
+[node name="PortaMercado" type="StaticBody3D" parent="."]
+collision_layer = 1
 position = Vector3(0, 1.15, 6.85)
 
 [node name="Visual" type="MeshInstance3D" parent="PortaMercado"]
 mesh = SubResource("MESH40")
 material_override = SubResource("MAT42")
+
+[node name="Collision" type="CollisionShape3D" parent="PortaMercado"]
+shape = SubResource("CollisionPortaMercado")
 
 [node name="ParedePortaA" type="StaticBody3D" parent="."]
 position = Vector3(-3.5, 1.6, 7)

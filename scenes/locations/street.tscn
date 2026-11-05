@@ -133,6 +133,30 @@ radius = 1.35
 [sub_resource type="SphereShape3D" id="TRIGGER45"]
 radius = 1.35
 
+[sub_resource type="BoxMesh" id="MeshLimiteOeste"]
+size = Vector3(0.2, 3, 18)
+
+[sub_resource type="BoxShape3D" id="ShapeLimiteOeste"]
+size = Vector3(0.2, 3, 18)
+
+[sub_resource type="BoxMesh" id="MeshLimiteLeste"]
+size = Vector3(0.2, 3, 18)
+
+[sub_resource type="BoxShape3D" id="ShapeLimiteLeste"]
+size = Vector3(0.2, 3, 18)
+
+[sub_resource type="BoxMesh" id="MeshLimiteNorte"]
+size = Vector3(18, 3, 0.2)
+
+[sub_resource type="BoxShape3D" id="ShapeLimiteNorte"]
+size = Vector3(18, 3, 0.2)
+
+[sub_resource type="BoxMesh" id="MeshLimiteSul"]
+size = Vector3(18, 3, 0.2)
+
+[sub_resource type="BoxShape3D" id="ShapeLimiteSul"]
+size = Vector3(18, 3, 0.2)
+
 [node name="RuaComercial" type="Node3D"]
 
 [node name="Sun" type="DirectionalLight3D" parent="."]
@@ -324,6 +348,50 @@ prompt = "Voltar ao escritório"
 
 [node name="ZoneShape" type="CollisionShape3D" parent="VoltarTrabalho"]
 shape = SubResource("TRIGGER45")
+
+[node name="LimiteOeste" type="StaticBody3D" parent="."]
+position = Vector3(-9, 1.5, 0)
+collision_layer = 1
+
+[node name="Visual" type="MeshInstance3D" parent="LimiteOeste"]
+mesh = SubResource("MeshLimiteOeste")
+visible = false
+
+[node name="Collision" type="CollisionShape3D" parent="LimiteOeste"]
+shape = SubResource("ShapeLimiteOeste")
+
+[node name="LimiteLeste" type="StaticBody3D" parent="."]
+position = Vector3(9, 1.5, 0)
+collision_layer = 1
+
+[node name="Visual" type="MeshInstance3D" parent="LimiteLeste"]
+mesh = SubResource("MeshLimiteLeste")
+visible = false
+
+[node name="Collision" type="CollisionShape3D" parent="LimiteLeste"]
+shape = SubResource("ShapeLimiteLeste")
+
+[node name="LimiteNorte" type="StaticBody3D" parent="."]
+position = Vector3(0, 1.5, -9)
+collision_layer = 1
+
+[node name="Visual" type="MeshInstance3D" parent="LimiteNorte"]
+mesh = SubResource("MeshLimiteNorte")
+visible = false
+
+[node name="Collision" type="CollisionShape3D" parent="LimiteNorte"]
+shape = SubResource("ShapeLimiteNorte")
+
+[node name="LimiteSul" type="StaticBody3D" parent="."]
+position = Vector3(0, 1.5, 9)
+collision_layer = 1
+
+[node name="Visual" type="MeshInstance3D" parent="LimiteSul"]
+mesh = SubResource("MeshLimiteSul")
+visible = false
+
+[node name="Collision" type="CollisionShape3D" parent="LimiteSul"]
+shape = SubResource("ShapeLimiteSul")
 
 [node name="Spawns" type="Node3D" parent="."]
 

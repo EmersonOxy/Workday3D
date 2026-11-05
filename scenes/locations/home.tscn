@@ -107,6 +107,9 @@ size = Vector3(3.5, 3.2, 0.2)
 [sub_resource type="SphereShape3D" id="TRIGGER33"]
 radius = 1.35
 
+[sub_resource type="BoxShape3D" id="CollisionPortaCasa"]
+size = Vector3(1.35, 2.25, 0.11)
+
 [node name="Casa" type="Node3D"]
 
 [node name="Sun" type="DirectionalLight3D" parent="."]
@@ -208,12 +211,16 @@ material_override = SubResource("MAT25")
 [node name="Collision" type="CollisionShape3D" parent="Mesa"]
 shape = SubResource("SHAPE24")
 
-[node name="PortaCasa" type="Node3D" parent="."]
+[node name="PortaCasa" type="StaticBody3D" parent="."]
+collision_layer = 1
 position = Vector3(0, 1.12, 5.85)
 
 [node name="Visual" type="MeshInstance3D" parent="PortaCasa"]
 mesh = SubResource("MESH26")
 material_override = SubResource("MAT28")
+
+[node name="Collision" type="CollisionShape3D" parent="PortaCasa"]
+shape = SubResource("CollisionPortaCasa")
 
 [node name="ParedeEntradaA" type="StaticBody3D" parent="."]
 position = Vector3(-3.25, 1.6, 6)
