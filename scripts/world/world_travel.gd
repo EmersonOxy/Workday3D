@@ -31,7 +31,7 @@ func configure(main_scene: Node3D, actor: CharacterBody3D) -> void:
 	office_zones.name = "OfficeInteractionZones"
 	host.add_child(office_zones)
 	_create_office_interactions()
-	for name in ["Room", "OfficeTable", "OfficeChair", "Monitor", "KeyLight", "DirectionalLight3D"]:
+	for name in ["Room", "OfficeTable", "OfficeChair", "Monitor", "KeyLight", "DirectionalLight3D", "Office2DProps", "DeskCat"]:
 		var node := host.get_node_or_null(name) as Node3D
 		if node != null:
 			office_visible_nodes.append(node)

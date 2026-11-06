@@ -5,11 +5,6 @@ const SCREEN_SIZE := Vector2(0.86, 0.48)
 const VIEWPORT_SIZE := Vector2i(1280, 720)
 const DESKTOP_SCREEN_FILL := 0.94
 const WORKER_SKIN := preload("res://assets/materials/worker_skin.tres")
-@export var desk_cat_offset := Vector3(-0.42, 0.0, 0.25):
-	set(value):
-		desk_cat_offset = value
-		if is_node_ready():
-			_place_desk_cat()
 @export_range(10.0, 85.0, 1.0) var horizontal_look_limit_degrees := 65.0
 @export_range(45.0, 100.0, 1.0) var seated_thigh_angle := 82.0:
 	set(value):
@@ -29,7 +24,6 @@ const WORKER_SKIN := preload("res://assets/materials/worker_skin.tres")
 @onready var monitor_area: Area3D = $MonitorArea
 @onready var monitor_screen: MeshInstance3D = $Monitor/Screen
 @onready var worker_root: Node3D = $Character/OfficeWorker
-@onready var desk_cat: Sprite3D = $DeskCat
 
 @onready var desktop_viewport: SubViewport = $DesktopSubViewport
 @onready var desktop: Control = $DesktopSubViewport/WorkOSDesktop
@@ -58,12 +52,10 @@ func _process(_delta: float) -> void:
 	if pose_inputs != last_pose_inputs:
 		last_pose_inputs = pose_inputs
 		_apply_seated_pose()
-		_place_desk_cat()
 
 func _ready() -> void:
 	_apply_model_fixes()
 	_sync_furniture_collisions()
-	_place_desk_cat()
 	if Engine.is_editor_hint():
 		return
 
@@ -229,6 +221,15 @@ func _runtime_hand_targets() -> Node3D:
 			targets.add_child(marker)
 	return targets
 
+func _table_top_height() -> float:
+	var top := -INF
+	for mesh_node in $OfficeTable.find_children("*", "MeshInstance3D", true, false):
+		var bounds: AABB = mesh_node.get_aabb()
+		for corner in 8:
+			var world: Vector3 = mesh_node.global_transform * bounds.get_endpoint(corner)
+			top = maxf(top, world.y)
+	return top
+
 func pose_player_hands(skeleton: Skeleton3D, weight: float, animation_time: float) -> void:
 	var targets := _runtime_hand_targets()
 	$ArmRestTargets.sync_anchor()
@@ -254,22 +255,6 @@ func pose_player_hands(skeleton: Skeleton3D, weight: float, animation_time: floa
 func _solve_target_hands(skeleton: Skeleton3D, targets: Node3D, forward: Vector3 = Vector3.ZERO) -> void:
 	_pose_arm(skeleton, "LeftShoulder_010", "LeftArm_011", "LeftForeArm_012", "LeftHand_013", "LeftHandMiddle1_022", targets.get_node("LeftHand"), targets.get_node("LeftElbow"), forward)
 	_pose_arm(skeleton, "RightShoulder_033", "RightArm_034", "RightForeArm_035", "RightHand_036", "RightHandMiddle1_045", targets.get_node("RightHand"), targets.get_node("RightElbow"), forward)
-
-func _table_top_height() -> float:
-	var top := -INF
-	for mesh_node in $OfficeTable.find_children("*", "MeshInstance3D", true, false):
-		var bounds: AABB = mesh_node.get_aabb()
-		for corner in 8:
-			var world: Vector3 = mesh_node.global_transform * bounds.get_endpoint(corner)
-			top = maxf(top, world.y)
-	return top
-
-func _place_desk_cat() -> void:
-	if desk_cat == null or not is_instance_valid(desk_cat): return
-	var table: Node3D = $OfficeTable
-	var table_basis := table.global_basis.orthonormalized()
-	desk_cat.global_position = table.global_position + table_basis * Vector3(desk_cat_offset.x, 0.0, desk_cat_offset.z)
-	desk_cat.global_position.y = _table_top_height() + desk_cat_offset.y + 0.006
 
 func pose_transition_hands(skeleton: Skeleton3D, standing: float, _time: float) -> void:
 	var targets := _runtime_hand_targets()
