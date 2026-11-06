@@ -13,6 +13,7 @@ const SOCIAL_SCRIPT := preload("res://scripts/workos/social_state.gd")
 const EFFECTS_SCRIPT := preload("res://scripts/workos/effects.gd")
 const WINDOW_SCRIPT := preload("res://scripts/workos/os_window.gd")
 const APPS := preload("res://scripts/workos/apps.gd")
+const MSN_APP := preload("res://scripts/workos/msn_app.gd")
 const PIXEL := preload("res://scripts/workos/pixel.gd")
 const STYLE := preload("res://scripts/workos/os_style.gd")
 const SAVE_PATH := "user://workos.cfg"
@@ -520,14 +521,20 @@ func open_app(id: String) -> void:
 	window.closed.connect(_close.bind(id))
 	window.minimize_requested.connect(_minimize.bind(id))
 	_add_task(id)
-	var app: Control = load("res://scenes/workos/apps/%s.tscn" % id).instantiate()
+	var app: Control
+	if id == "messenger":
+		# O MSworkN ocupa a janela inteira, sem a margem do papel (.os-win.msn-win .mw-in { padding: 0 }).
+		app = MSN_APP.new()
+		window.paper.add_theme_stylebox_override("panel", STYLE.flat(STYLE.PAPER, Color.TRANSPARENT, 0, 0))
+	else:
+		app = load("res://scenes/workos/apps/%s.tscn" % id).instantiate()
 	app.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	window.content.add_child(app)
 	match id:
 		"workday": app.setup(game, self)
 		"calendar": APPS.calendar(app, game)
 		"archive": APPS.archive(app, game)
-		"messenger": APPS.messenger(app, social)
+		"messenger": app.setup(social)
 		"profile": APPS.profile(app, game)
 		"backup": APPS.backup(app, game)
 		"notes": _build_notes(app)

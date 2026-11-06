@@ -37,6 +37,7 @@ define('OS_PICS', literal(telas, 'const OS_PICS ='));
 define('APP_ICO.arq', literal(events, 'APP_ICO.arq ='));
 define('APP_ICO.shop', literal(events, 'APP_ICO.shop ='));
 define('APP_ICO.msn', literal(read('44-social-elenco.js'), 'APP_ICO.msn ='));
-const out = vm.runInContext('({orb: ORB_ICO, menu_icons: MENU_ICO, app_icons: APP_ICO, os_pics: OS_PICS, sprites: SPR, sprites2: SPR2, legacy_palette: PAL})', ctx);
+define('MSN_PICS', literal(read('44-social-elenco.js'), 'const MSN_PICS ='));
+const out = vm.runInContext('({orb: ORB_ICO, menu_icons: MENU_ICO, app_icons: APP_ICO, os_pics: OS_PICS, sprites: SPR, sprites2: SPR2, legacy_palette: PAL, msn_pics: MSN_PICS})', ctx);
 fs.writeFileSync('assets/data/workos_ui.json', JSON.stringify(out));
 console.log('WorkOS UI tables:', Object.entries(out).map(([k, v]) => k + '=' + Object.keys(v).length).join(', '));
