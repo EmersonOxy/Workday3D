@@ -1,0 +1,7 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://assets/models/biblioteca/single-story-house-textured-with-interior/source/building_house.fbx" id="1_model"]
+
+[node name="CasaComInterior" type="Node3D"]
+
+[node name="Modelo" parent="." instance=ExtResource("1_model")]

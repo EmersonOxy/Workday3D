@@ -1,0 +1,5 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/props/workday_cat_3d.tscn" id="1_sprite"]
+
+[node name="GatoDeMesa" instance=ExtResource("1_sprite")]

@@ -1,0 +1,7 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://assets/models/biblioteca/empty-office-space/source/tile room empty.fbx" id="1_model"]
+
+[node name="SalaVazia" type="Node3D"]
+
+[node name="Modelo" parent="." instance=ExtResource("1_model")]
