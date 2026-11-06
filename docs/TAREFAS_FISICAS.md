@@ -24,3 +24,11 @@ Mire com o ponto central e use **E**. O tempo do expediente corre fora do comput
 
 ## Depuração (builds de debug)
 F1 telefone · F2 impressora · F3 lixo · F4 chefe · F6/F7 avançam o relógio.
+
+## Créditos de shaders
+- `assets/shaders/light_shaft.gdshader`: esmaecimento por ângulo de visão a partir de [Fake Godrays (Godot 4.x)](https://godotshaders.com/shader/fake-godrays-godot-4-2/), de Ivan Isaev (CC0).
+- `assets/shaders/curtain_fabric.gdshader`: perturbação de normal com ruído de valor segundo o [Procedural Cloth Wrinkles Shader](https://godotshaders.com/shader/procedural-cloth-wrinkles-shader/), de Yui Kinomoto (arlez80), licença MIT. O código é uma reescrita; a ideia e o crédito são dele.
+- Os demais (`exterior_sky`, `exterior_building`, `light_patch`) são originais deste projeto.
+
+## Desempenho (RX550, 1280×720)
+Os spots dos postes com sombra eram o item mais caro (também de dia, pois seguiam sendo renderizados com energia 0). Foram trocados por uma mancha de luz no chão (`light_patch.gdshader`) calculada a partir do poste. Pior caso: 76 → 258 fps. O sol continua com sombra real (custa uns 25 % do quadro de dia).

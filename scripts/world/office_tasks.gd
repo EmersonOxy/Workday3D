@@ -245,7 +245,7 @@ func _find_aimed() -> Dictionary:
 		if along < 0.1 or along > AIM_RANGE: continue
 		var closest := origin + direction * along
 		# Tolerância angular: a câmera balança ao andar, então alvos pequenos aceitam uns 2,5° de erro.
-		if closest.distance_to(point) > maxf(float(entry.radius), along * 0.045): continue
+		if closest.distance_to(point) > maxf(float(entry.radius), along * 0.055): continue
 		if along < best_t:
 			best_t = along
 			best = entry
@@ -356,8 +356,8 @@ func _start_printer(task: Dictionary) -> void:
 	var box := _global_aabb(printer)
 	var total := clampi(int(round(float(task.need) / 2.0)), 3, 5)
 	var rng: RandomNumberGenerator = game.rng
-	# Faces visíveis a partir da sala: frente (-x), topo, lateral -z e lateral +z.
-	var faces := [Vector3(-1, 0, 0), Vector3(-1, 0, 0), Vector3(0, 1, 0), Vector3(0, 0, -1), Vector3(-1, 0, 0), Vector3(0, 0, 1)]
+	# Só faces que o jogador consegue ver e alcançar: frente (-x), topo e lateral -z (a lateral +z fica de frente para a parede).
+	var faces := [Vector3(-1, 0, 0), Vector3(-1, 0, 0), Vector3(0, 1, 0), Vector3(0, 0, -1), Vector3(-1, 0, 0)]
 	var placed: Array[Vector3] = []
 	var texture := _ring_texture()
 	var index := 0

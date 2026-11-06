@@ -11,6 +11,8 @@ extends Node3D
 const SKY_SHADER := preload("res://assets/shaders/exterior_sky.gdshader")
 const SHAFT_SHADER := preload("res://assets/shaders/light_shaft.gdshader")
 const BUILDING_SHADER := preload("res://assets/shaders/exterior_building.gdshader")
+const CURTAIN_SHADER := preload("res://assets/shaders/curtain_fabric.gdshader")
+const PATCH_SHADER := preload("res://assets/shaders/light_patch.gdshader")
 const WINDOW_W := 1.3
 const WINDOW_H := 1.35
 const SILL := 0.95
@@ -50,6 +52,7 @@ func configure(host: Node3D, task_node: Node3D) -> void:
 	_build_walls()
 	_build_exterior()
 	_build_windows()
+	_build_patches()
 	_build_sun()
 	_hook_lamps()
 	_hook_switch()
@@ -183,23 +186,30 @@ func _build_exterior() -> void:
 			bulb.material_override = glow
 			bulb.position = Vector3(pole_x - side * 1.0, 5.3, pole_z)
 			outside.add_child(bulb)
-			var spot := SpotLight3D.new()
-			spot.spot_angle = 38.0
-			spot.spot_range = 22.0
-			spot.light_energy = 0.0
-			spot.light_color = Color("#ffcf8a")
-			spot.shadow_enabled = true
-			spot.shadow_bias = 0.08
-			outside.add_child(spot)
-			var inside_target := Vector3(LEFT_X if side < 0 else RIGHT_X, 1.4, float(window.c))
-			spot.look_at_from_position(bulb.position, inside_target, Vector3.UP)
-			street_lamps.append({"bulb": bulb, "glow": glow, "spot": spot, "window_z": window.c, "side": side})
+			street_lamps.append({"bulb": bulb, "glow": glow, "window_z": window.c, "side": side})
 	# Nada lá fora precisa projetar sombra no escritório (só as paredes e a esquadria), e as sombras dos prédios
 	# custavam centenas de chamadas de desenho nas luzes com sombra.
 	for mesh in outside.find_children("*", "MeshInstance3D", true, false):
 		mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 
 # ---------------------------------------------------------------- Janelas: moldura, cortina, feixes, luz que sai
+
+var _projector: ImageTexture
+
+## Textura projetada pela luz dos postes: preto fora da janela e quatro vidros claros separados pelas divisões.
+func _window_projector() -> ImageTexture:
+	if _projector != null: return _projector
+	var size := 256
+	var image := Image.create(size, size, false, Image.FORMAT_L8)
+	for y in size:
+		for x in size:
+			var u := float(x) / (size - 1)
+			var v := float(y) / (size - 1)
+			var inside := smoothstep(0.14, 0.17, u) * smoothstep(0.86, 0.83, u) * smoothstep(0.14, 0.17, v) * smoothstep(0.86, 0.83, v)
+			var bar := 1.0 - (smoothstep(0.012, 0.0, absf(u - 0.5)) + smoothstep(0.012, 0.0, absf(v - 0.5)))
+			image.set_pixel(x, y, Color(inside * clampf(bar, 0.0, 1.0), 0, 0))
+	_projector = ImageTexture.create_from_image(image)
+	return _projector
 
 func _shaft_node(color: Color) -> Dictionary:
 	var node := MeshInstance3D.new()
@@ -215,7 +225,6 @@ func _shaft_node(color: Color) -> Dictionary:
 
 func _build_windows() -> void:
 	var trim := _flat(Color("#d9d1c0"), 0.7)
-	var cloth := _flat(Color("#5f7aa8"), 1.0)
 	for window in WINDOWS:
 		var left: bool = window.wall == "left"
 		var normal := Vector3(1, 0, 0) if left else Vector3(-1, 0, 0)
@@ -250,6 +259,8 @@ func _build_windows() -> void:
 		curtain_root.position = Vector3(0, 0.08, 0.14)
 		holder.add_child(curtain_root)
 		var pivots: Array[Node3D] = []
+		var cloth := ShaderMaterial.new()
+		cloth.shader = CURTAIN_SHADER
 		for side in [-1.0, 1.0]:
 			var pivot := Node3D.new()
 			pivot.position = Vector3(side * (WINDOW_W / 2.0 + 0.16), 0, 0)
@@ -259,7 +270,7 @@ func _build_windows() -> void:
 			pivots.append(pivot)
 		var rod := _box(Vector3(WINDOW_W + 0.55, 0.035, 0.035), Vector3(0, WINDOW_H / 2.0 + 0.27, 0.14), _flat(Color("#2b2f38")))
 		holder.add_child(rod)
-		var entry := {"holder": holder, "center": center, "normal": normal, "left": left, "pivots": pivots, "open": 1.0, "tween": null,
+		var entry := {"holder": holder, "center": center, "normal": normal, "left": left, "pivots": pivots, "cloth": cloth, "open": 1.0, "tween": null,
 			"sun": _shaft_node(Color(1.0, 0.9, 0.65)), "lamp": _shaft_node(Color(1.0, 0.82, 0.5)), "out": _shaft_node(Color(1.0, 0.85, 0.55)),
 			"spill": SpotLight3D.new()}
 		var spill: SpotLight3D = entry.spill
@@ -275,6 +286,33 @@ func _build_windows() -> void:
 		_apply_curtain(entry)
 		var index := window_nodes.size() - 1
 		tasks.register(holder, "curtain", 0.75, func() -> String: return "E · Fechar a cortina" if window_nodes[index].open > 0.5 else "E · Abrir a cortina", func() -> void: toggle_curtain(index), center + Vector3(0, -0.15, 0))
+
+## Mancha de luz do poste no chão: os quatro cantos da janela projetados a partir da lâmpada até o piso.
+func _build_patches() -> void:
+	for entry in window_nodes:
+		for lamp in street_lamps:
+			if absf(float(lamp.window_z) - entry.center.z) > 0.01 or (lamp.side < 0) != entry.left: continue
+			var source: Vector3 = lamp.bulb.position
+			var corners: Array[Vector3] = []
+			var uvs: Array[Vector2] = [Vector2(0.14, 0.14), Vector2(0.86, 0.14), Vector2(0.86, 0.86), Vector2(0.14, 0.86)]
+			for corner in [Vector3(-1, 1, 0), Vector3(1, 1, 0), Vector3(1, -1, 0), Vector3(-1, -1, 0)]:
+				var point: Vector3 = entry.center + Vector3(0, 0, corner.x * WINDOW_W / 2.0) + Vector3(0, corner.y * WINDOW_H / 2.0, 0)
+				var t := (0.012 - source.y) / (point.y - source.y)
+				corners.append(source + (point - source) * t)
+			var tool := SurfaceTool.new()
+			tool.begin(Mesh.PRIMITIVE_TRIANGLES)
+			for index in [0, 1, 2, 0, 2, 3]:
+				tool.set_uv(uvs[index])
+				tool.add_vertex(corners[index])
+			var material := ShaderMaterial.new()
+			material.shader = PATCH_SHADER
+			material.set_shader_parameter("pattern", _window_projector())
+			var node := MeshInstance3D.new()
+			node.mesh = tool.commit()
+			node.material_override = material
+			node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			add_child(node)
+			entry["patch"] = {"node": node, "material": material}
 
 func toggle_curtain(index: int) -> void:
 	var entry: Dictionary = window_nodes[index]
@@ -299,7 +337,7 @@ func _build_sun() -> void:
 	sun.name = "SolDasJanelas"
 	sun.shadow_enabled = true
 	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL
-	sun.directional_shadow_max_distance = 30.0
+	sun.directional_shadow_max_distance = 16.0
 	sun.shadow_bias = 0.04
 	sun.shadow_normal_bias = 1.2
 	sun.light_energy = 0.0
@@ -385,7 +423,6 @@ func _update(force: bool) -> void:
 	for lamp in street_lamps:
 		var on := night > 0.35
 		lamp.glow.emission_energy_multiplier = 3.0 if on else 0.0
-		lamp.spot.light_energy = 14.0 if on else 0.0
 	for entry in window_nodes:
 		var normal: Vector3 = entry.normal
 		var toward := -sun_position   # direção em que a luz do sol viaja
@@ -407,6 +444,12 @@ func _update(force: bool) -> void:
 		var out_dir: Vector3 = -normal + Vector3(0, -0.28, 0)
 		var out_strength := night * open * lamp_level * 0.12
 		_set_shaft_out(entry.out, entry.center, out_dir.normalized(), out_strength, 6.0)
+		# Tecido brilha por dentro quando fechado e há sol (ou poste) do outro lado.
+		var behind := clampf(daylight * (0.25 + maxf(enters, 0.0)), 0.0, 1.0) * (1.0 - open) + night * 0.3 * (1.0 - open)
+		entry.cloth.set_shader_parameter("backlight", behind)
+		entry.cloth.set_shader_parameter("backlight_color", Color(1.0, 0.88, 0.62).lerp(Color(1.0, 0.7, 0.4), low_sun) if daylight > 0.1 else Color(1.0, 0.82, 0.55))
+		if entry.has("patch"):
+			entry.patch.material.set_shader_parameter("intensity", clampf(night * open * 0.34, 0.0, 1.0) if night > 0.35 else 0.0)
 		var spill: SpotLight3D = entry.spill
 		spill.light_energy = 3.2 * night * open * lamp_level
 		spill.visible = spill.light_energy > 0.02
@@ -429,6 +472,7 @@ func _build_shaft(origin: Vector3, normal: Vector3, direction: Vector3, max_leng
 		for entry in [[near[index], Vector2(0, 0)], [near[next], Vector2(1, 0)], [far[next], Vector2(1, 1)], [near[index], Vector2(0, 0)], [far[next], Vector2(1, 1)], [far[index], Vector2(0, 1)]]:
 			tool.set_uv(entry[1])
 			tool.add_vertex(entry[0])
+	tool.generate_normals()
 	return tool.commit()
 
 func _set_shaft(shaft: Dictionary, origin: Vector3, normal: Vector3, direction: Vector3, strength: float, length: float) -> void:

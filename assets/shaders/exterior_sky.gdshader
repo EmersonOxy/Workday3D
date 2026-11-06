@@ -18,6 +18,26 @@ float hash3(vec3 p) {
 	return fract(sin(dot(p, vec3(12.9898, 78.233, 37.719))) * 43758.5453);
 }
 
+float hash2(vec2 p) {
+	return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+}
+float vnoise(vec2 p) {
+	vec2 i = floor(p);
+	vec2 f = fract(p);
+	vec2 u = f * f * (3.0 - 2.0 * f);
+	return mix(mix(hash2(i), hash2(i + vec2(1.0, 0.0)), u.x), mix(hash2(i + vec2(0.0, 1.0)), hash2(i + vec2(1.0, 1.0)), u.x), u.y);
+}
+float fbm(vec2 p) {
+	float value = 0.0;
+	float amplitude = 0.5;
+	for (int i = 0; i < 4; i++) {
+		value += amplitude * vnoise(p);
+		p = p * 2.03 + vec2(17.1, 5.3);
+		amplitude *= 0.5;
+	}
+	return value;
+}
+
 void vertex() {
 	v_dir = normalize(VERTEX);
 }
@@ -38,6 +58,15 @@ void fragment() {
 	float toward_moon = max(dot(d, normalize(moon_dir)), 0.0);
 	col = mix(col, vec3(0.92, 0.95, 1.0), smoothstep(0.9995, 0.9999, toward_moon) * (1.0 - daylight));
 	col += vec3(0.5, 0.6, 0.9) * pow(toward_moon, 60.0) * 0.18 * (1.0 - daylight);
+	// Nuvens: ruído fractal num plano projetado, tingidas pelo sol (brancas de dia, rosadas no entardecer, escuras à noite).
+	if (d.y > 0.02) {
+		vec2 cp = d.xz / (d.y + 0.35) * 1.5 + vec2(TIME * 0.004, TIME * 0.0015);
+		float cloud = smoothstep(0.5, 0.8, fbm(cp)) * smoothstep(0.02, 0.22, d.y);
+		vec3 cloud_col = mix(vec3(0.16, 0.18, 0.28), vec3(1.0), daylight);
+		cloud_col = mix(cloud_col, sunset * 1.15, low_sun * 0.7 * daylight);
+		cloud_col *= 0.82 + 0.18 * vnoise(cp * 3.0);
+		col = mix(col, cloud_col, cloud * 0.85);
+	}
 	// Estrelas.
 	vec3 cell = floor(d * 160.0);
 	float star = step(0.9965, hash3(cell)) * (1.0 - daylight) * smoothstep(0.05, 0.35, h);
