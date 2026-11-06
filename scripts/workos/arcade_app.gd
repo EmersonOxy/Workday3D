@@ -17,6 +17,9 @@ var game: Node
 var fx: Node
 var stage: Control
 
+## Tamanho de janela desejado pela tela atual (menu baixo; jogo com o quadro ampliado).
+signal layout_wanted(size: Vector2)
+
 func setup(state: Node, effects: Node) -> void:
 	game = state
 	fx = effects
@@ -38,6 +41,7 @@ func _menu() -> void:
 	title.text = "ARCADE DO EXPEDIENTE"
 	title.add_theme_font_size_override("font_size", 30)
 	add_child(title)
+	layout_wanted.emit(Vector2(620, 410))
 	for item in GAMES:
 		var card := Button.new()
 		card.focus_mode = Control.FOCUS_NONE
@@ -67,6 +71,7 @@ func _start(id: String) -> void:
 	stage.set("arcade", self)
 	holder.add_child(stage)
 	stage.grab_focus()
+	layout_wanted.emit(Vector2(maxf(620.0, W * SCALE + 70.0), H * SCALE + 120.0))
 
 func finish(id: String, score: int) -> void:
 	if score > _record(id):

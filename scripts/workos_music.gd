@@ -122,22 +122,59 @@ func _save() -> void:
 	preferences.save(save_path)
 
 func build_ui(parent: Control) -> void:
-	var now: Label = parent.get_node("Now")
-	var sound: CheckButton = parent.get_node("Sound")
+	# RADIO.EXE (osMusic de 09-telas.js): faixa atual, lista de botões com marca, volume e "Próxima faixa".
+	for child in parent.get_children():
+		parent.remove_child(child)
+		child.queue_free()
+	var ink := Color("2a1f2d")
+	var now := Label.new()
+	now.add_theme_font_size_override("font_size", 22)
+	now.add_theme_color_override("font_color", ink)
+	parent.add_child(now)
+	var sound := CheckButton.new()
+	sound.text = "Reproduzir música"
 	sound.button_pressed = sound_on
 	sound.toggled.connect(set_sound)
+	parent.add_child(sound)
+	var buttons: Array[Button] = []
 	for index in TRACKS.size():
-		var track: CheckBox = parent.get_node("Tracks/Track%d" % index)
-		track.text = "%s\n%s" % [TRACKS[index][1], TRACKS[index][2]]
+		var track := Button.new()
+		track.toggle_mode = true
 		track.button_pressed = enabled[index]
+		track.focus_mode = Control.FOCUS_NONE
+		track.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		track.custom_minimum_size.y = 58
 		track.toggled.connect(func(value: bool) -> void: set_track_enabled(index, value))
-	var slider: HSlider = parent.get_node("Volume")
+		parent.add_child(track)
+		buttons.append(track)
+	var volume_row := HBoxContainer.new()
+	parent.add_child(volume_row)
+	var volume_label := Label.new()
+	volume_label.text = "Volume"
+	volume_row.add_child(volume_label)
+	var slider := HSlider.new()
+	slider.max_value = 1.0
+	slider.step = 0.05
 	slider.value = volume
+	slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	slider.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	slider.value_changed.connect(set_volume)
-	parent.get_node("Next").pressed.connect(skip)
+	volume_row.add_child(slider)
+	var next := Button.new()
+	next.text = "Próxima faixa"
+	next.focus_mode = Control.FOCUS_NONE
+	next.pressed.connect(skip)
+	parent.add_child(next)
 	var refresh := func() -> void:
 		if not is_instance_valid(now): return
-		now.text = "Som desligado" if not sound_on else ("Nenhuma faixa selecionada" if selected < 0 else "Tocando: " + TRACKS[selected][1])
+		now.text = "Som desligado." if not sound_on else ("Nada tocando (nenhuma faixa ligada)." if selected < 0 else "Tocando: " + TRACKS[selected][1])
+		for index in buttons.size():
+			var mark := "[x] " if enabled[index] else "[ ] "
+			var playing := sound_on and index == selected
+			buttons[index].text = "%s%s%s
+     %s" % [mark, ("> " if playing else ""), TRACKS[index][1], TRACKS[index][2]]
+			buttons[index].set_pressed_no_signal(enabled[index])
+		sound.set_pressed_no_signal(sound_on)
 	changed.connect(refresh)
 	parent.tree_exiting.connect(func() -> void: changed.disconnect(refresh))
 	refresh.call()

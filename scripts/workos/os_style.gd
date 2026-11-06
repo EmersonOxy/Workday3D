@@ -17,6 +17,15 @@ const BLUE_HI := Color("6f93d9")
 const BLUE_LO := Color("2b2340")
 const UI := "res://assets/ui/workos/"
 
+## Paletas do Personalizar (OS_ACCENTS, OS_BARS e BADGE_COLORS de 30-personalizar.js): [cor, realce] e, nas barras, [base, realce, sombra, botão].
+const ACCENTS := {"azul": ["44609f", "6f93d9"], "verde": ["2f8a45", "6fbf73"], "uva": ["7656a8", "a983d6"], "tijolo": ["a24a33", "d9714a"], "petroleo": ["2f6f78", "5fa79a"],
+	"grafite": ["3b3f48", "626875"], "cereja": ["a8262a", "ef4b3f"], "laranja": ["c25f3b", "f0915f"], "noite": ["2b2340", "463462"], "ouro": ["8a5420", "c98a2e"]}
+const BARS := {"bege": ["c7b595", "fff8ec", "8f7d63", "e9dcc2"], "cinza": ["9aa0ab", "d7d9de", "626875", "d7d9de"], "noite": ["2b2340", "4a3a4e", "2a1f2d", "463462"],
+	"menta": ["5fa79a", "a9dccf", "2f6f78", "a9dccf"], "creme": ["e9dcc2", "fbf3e2", "c7b595", "fbf3e2"], "lavanda": ["a983d6", "e0cff7", "7656a8", "e0cff7"],
+	"pessego": ["f2a27a", "ffd0b0", "d9714a", "ffd0b0"], "madeira": ["a8623a", "d48a4f", "6e3b26", "f0b778"]}
+const BADGES := {"azul": ["6f93d9", "44609f"], "vermelho": ["ef4b3f", "a8262a"], "verde": ["6fbf73", "3f8f50"], "amarelo": ["f4c15d", "c98a2e"], "roxo": ["a983d6", "7656a8"],
+	"preto": ["4a3a4e", "2a1f2d"], "laranja": ["f0915f", "c25f3b"], "menta": ["5fa79a", "2f6f78"], "cinza": ["9aa0ab", "626875"], "branco": ["fbf3e2", "c7b595"], "coral": ["ff9d86", "c25f3b"]}
+
 static var _theme: Theme
 static var _font: FontFile
 

@@ -178,8 +178,14 @@ func _draw_file(font: Font, width: float) -> void:
 	if glyph != null: draw_texture(glyph, tile.get_center() - glyph.get_size() / 2.0)
 	var tag: String = ui_text("deadFile", "Arquivo morto") if dead else str(file.name)
 	var sub: String = ui_text("pressDelete", "aperte Delete") if dead else str(game.texts().sectors[sector])
-	draw_string(font, local.position + Vector2(54, 30), tag, HORIZONTAL_ALIGNMENT_LEFT, local.size.x - 60, 22, STYLE.INK)
-	draw_string(font, local.position + Vector2(54, 52), sub, HORIZONTAL_ALIGNMENT_LEFT, local.size.x - 60, 19, MUTED)
+	# O nome encolhe até caber na largura da coluna (como o texto do documento no CSS), sem cortar a última letra.
+	var room := local.size.x - 62
+	var tag_size := 22
+	while tag_size > 15 and font.get_string_size(tag, HORIZONTAL_ALIGNMENT_LEFT, -1, tag_size).x > room: tag_size -= 1
+	var sub_size := 19
+	while sub_size > 14 and font.get_string_size(sub, HORIZONTAL_ALIGNMENT_LEFT, -1, sub_size).x > room: sub_size -= 1
+	draw_string(font, local.position + Vector2(54, 30), tag, HORIZONTAL_ALIGNMENT_LEFT, room, tag_size, STYLE.INK)
+	draw_string(font, local.position + Vector2(54, 52), sub, HORIZONTAL_ALIGNMENT_LEFT, room, sub_size, MUTED)
 	if urgent:
 		# Carimbo URGENTE vermelho, inclinado 8°, no canto de cima.
 		draw_set_transform(center + Vector2(rect.size.x / 2.0 - 30, -rect.size.y / 2.0 - 4), sway + deg_to_rad(8))

@@ -2,6 +2,8 @@ extends Node
 
 signal changed
 signal incoming(npc: String, text: String)
+signal requested(npc: String)
+signal came_online(npc: String)
 var game: Node
 var tick := 0.0
 var elapsed := 0.0
@@ -208,12 +210,26 @@ func _process(delta: float) -> void:
 	elapsed = 0
 	_sync()
 
+var _online := {}
+var _presence_ready := false
+
+## Avisa quando um contato conhecido passa a ficar online (Msn.toast "está online").
+func _watch_presence() -> void:
+	for id in state.contacts:
+		if state.contacts[id].status != "known": continue
+		var online := presence(id) == "online"
+		if online and _presence_ready and not _online.get(id, false) and state.status not in ["dnd", "invisible"]:
+			came_online.emit(id)
+		_online[id] = online
+	_presence_ready = true
+
 func _sync() -> void:
+	_watch_presence()
 	for id in game.data.cast:
 		var definition: Dictionary = game.data.cast[id]
 		if state.contacts[id].status == "none" and definition.has("unlock") and condition(definition.unlock.when, id):
 			state.contacts[id].status = "request"
-			incoming.emit(id, "Nova solicitação de contato")
+			requested.emit(id)
 	for id in state.threads.keys():
 		var thread: Dictionary = state.threads[id]
 		if thread.has("due") and game.day() > int(thread.due):

@@ -10,6 +10,7 @@ signal minimize_requested
 signal activated
 
 const STYLE := preload("res://scripts/workos/os_style.gd")
+const MOTION := preload("res://scripts/workos/motion.gd")
 const UI := "res://assets/ui/workos/"
 const TITLE_HEIGHT := 40
 const FRAME := Vector4(10, 9, 10, 14)
@@ -123,6 +124,22 @@ func configure(title: String, icon: Texture2D = null) -> void:
 	pivot_offset = size / 2.0
 	resized.connect(func() -> void: pivot_offset = size / 2.0)
 
+## Cor das janelas (--os-ac / --os-ac-hi): faixa de título em degraus, realce em cima e contorno de tinta embaixo.
+func set_accent(id: String) -> void:
+	if not STYLE.ACCENTS.has(id) or id == "azul":
+		title_strip.texture = load(UI + "window-chrome-title.png")
+		return
+	var base := Color(STYLE.ACCENTS[id][0])
+	var high := Color(STYLE.ACCENTS[id][1])
+	var image := Image.create(1, TITLE_HEIGHT, false, Image.FORMAT_RGBA8)
+	for y in TITLE_HEIGHT:
+		var color := base
+		if y < 2: color = high
+		elif y < 5: color = high.lerp(base, float(y - 1) / 4.0)
+		elif y >= TITLE_HEIGHT - 3: color = base.darkened(0.45)
+		image.set_pixel(0, y, color)
+	title_strip.texture = ImageTexture.create_from_image(image)
+
 func set_title(title: String) -> void:
 	title_label.text = title
 
@@ -177,79 +194,122 @@ func toggle_maximize() -> void:
 
 ## Degraus como o steps(10) do CSS.
 static func _step(t: float, steps: int) -> float:
-	return floorf(t * steps) / steps
+	return MOTION.step(t, steps)
 
+## Recorte animado (clip-path do original): a janela se desenha normalmente, mas só aparece dentro de `reveal`.
+## O próprio nó vira máscara (clip_children) enquanto anima; o conteúdo nunca é esticado.
+var _reveal := Rect2()
+var _clipping := false
+
+func _draw() -> void:
+	if _clipping: draw_rect(_reveal, Color.WHITE)
+
+func _begin_clip(rect: Rect2) -> void:
+	_clipping = true
+	_reveal = rect
+	clip_children = CanvasItem.CLIP_CHILDREN_ONLY
+	queue_redraw()
+
+func _set_clip(rect: Rect2) -> void:
+	_reveal = rect
+	queue_redraw()
+
+func _end_clip() -> void:
+	_clipping = false
+	clip_children = CanvasItem.CLIP_CHILDREN_DISABLED
+	queue_redraw()
+
+## Retângulo de uma faixa centralizada: largura e altura (px) no centro da janela.
+func _centered(width: float, height: float) -> Rect2:
+	return Rect2((size.x - width) / 2.0, (size.y - height) / 2.0, width, height)
+
+## OS_OPEN: ponto → linha (largura cheia, 2 px) em 35 % → janela inteira, em 10 degraus.
 func play_open() -> void:
 	animating = true
-	pivot_offset = size / 2.0
-	var line := 2.0 / maxf(size.y, 1.0)
-	scale = Vector2(0.0, line)
+	if MOTION.reduced:
+		modulate.a = 0.0
+		await create_tween().tween_property(self, "modulate:a", 1.0, 0.12).finished
+		animating = false
+		return
+	_begin_clip(Rect2())
 	var tween := create_tween()
 	tween.tween_method(func(t: float) -> void:
 		var s := _step(t, 10)
-		scale = Vector2(minf(1.0, s / 0.35), line if s < 0.35 else lerpf(line, 1.0, (s - 0.35) / 0.65)), 0.0, 1.0, 0.3)
+		if s < 0.35: _set_clip(_centered(size.x * s / 0.35, 2.0 * s / 0.35))
+		else: _set_clip(_centered(size.x, lerpf(2.0, size.y, (s - 0.35) / 0.65))), 0.0, 1.0, 0.3)
 	await tween.finished
-	scale = Vector2.ONE
+	_end_clip()
 	animating = false
 
+## OS_CLOSE: janela → linha em 60 % → ponto (monitor CRT desligando), em 8 degraus.
 func close() -> void:
 	if animating: return
 	animating = true
-	pivot_offset = size / 2.0
-	var line := 2.0 / maxf(size.y, 1.0)
-	var tween := create_tween()
-	tween.tween_method(func(t: float) -> void:
-		var s := _step(t, 8)
-		scale = Vector2(1.0 if s < 0.6 else maxf(0.0, 1.0 - (s - 0.6) / 0.4), lerpf(1.0, line, minf(1.0, s / 0.6))), 0.0, 1.0, 0.26)
-	await tween.finished
+	if MOTION.reduced:
+		await create_tween().tween_property(self, "modulate:a", 0.0, 0.12).finished
+	else:
+		_begin_clip(Rect2(Vector2.ZERO, size))
+		var tween := create_tween()
+		tween.tween_method(func(t: float) -> void:
+			var s := _step(t, 8)
+			if s < 0.6: _set_clip(_centered(size.x, lerpf(size.y, 2.0, s / 0.6)))
+			else: _set_clip(_centered(size.x * (1.0 - (s - 0.6) / 0.4), 2.0 * (1.0 - (s - 0.6) / 0.4))), 0.0, 1.0, 0.26)
+		await tween.finished
 	closed.emit()
 	queue_free()
 
-## Efeito "gênio": achata até uma linha embaixo e escorre até o botão da barra (alvo em coordenadas do pai).
+## Minimizar: recorta até uma faixa de 3 px na base, estreita e escorre até o botão da barra de tarefas (alvo no pai).
 func minimize_to(target: Vector2) -> void:
 	if animating: return
 	animating = true
 	var start := position
-	pivot_offset = Vector2(size.x / 2.0, size.y)
-	var line := 3.0 / maxf(size.y, 1.0)
 	var goal := target - Vector2(size.x / 2.0, size.y) if target != Vector2.ZERO else start + Vector2(0, size.y)
-	var tween := create_tween()
-	tween.tween_method(func(t: float) -> void:
-		var s := _step(t, 10)
-		if s < 0.45:
-			scale = Vector2(1.0, lerpf(1.0, line, s / 0.45))
-		else:
-			var k := (s - 0.45) / 0.55
-			scale = Vector2(lerpf(1.0, 0.3, k), line)
-			position = start.lerp(goal, k), 0.0, 1.0, 0.3)
-	await tween.finished
+	if MOTION.reduced:
+		await create_tween().tween_property(self, "modulate:a", 0.0, 0.12).finished
+		modulate.a = 1.0
+	else:
+		_begin_clip(Rect2(Vector2.ZERO, size))
+		var tween := create_tween()
+		tween.tween_method(func(t: float) -> void:
+			var s := _step(t, 10)
+			if s < 0.45:
+				var height := lerpf(size.y, 3.0, s / 0.45)
+				_set_clip(Rect2(0, size.y - height, size.x, height))
+			else:
+				var k := (s - 0.45) / 0.55
+				var width := lerpf(size.x, size.x * 0.3, k)
+				_set_clip(Rect2((size.x - width) / 2.0, size.y - 3.0, width, 3.0))
+				position = start.lerp(goal, k), 0.0, 1.0, 0.3)
+		await tween.finished
+		_end_clip()
 	hide()
 	position = start
-	scale = Vector2.ONE
 	animating = false
 	minimized.emit()
 
+## Restaurar: o caminho inverso, do botão da barra de tarefas até a janela inteira.
 func restore_from(source: Vector2) -> void:
 	show()
-	if source == Vector2.ZERO:
+	if source == Vector2.ZERO or MOTION.reduced:
 		await play_open()
 		return
 	animating = true
 	var target_position := position
-	pivot_offset = Vector2(size.x / 2.0, size.y)
-	var line := 3.0 / maxf(size.y, 1.0)
 	var from := source - Vector2(size.x / 2.0, size.y)
+	_begin_clip(Rect2())
 	var tween := create_tween()
 	tween.tween_method(func(t: float) -> void:
 		var s := _step(t, 10)
 		if s < 0.55:
 			var k := s / 0.55
-			scale = Vector2(lerpf(0.3, 1.0, k), line)
+			var width := lerpf(size.x * 0.3, size.x, k)
+			_set_clip(Rect2((size.x - width) / 2.0, size.y - 3.0, width, 3.0))
 			position = from.lerp(target_position, k)
 		else:
 			position = target_position
-			scale = Vector2(1.0, lerpf(line, 1.0, (s - 0.55) / 0.45)), 0.0, 1.0, 0.3)
+			var height := lerpf(3.0, size.y, (s - 0.55) / 0.45)
+			_set_clip(Rect2(0, size.y - height, size.x, height)), 0.0, 1.0, 0.3)
 	await tween.finished
 	position = target_position
-	scale = Vector2.ONE
+	_end_clip()
 	animating = false

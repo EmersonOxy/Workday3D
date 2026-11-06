@@ -6,6 +6,7 @@ extends HBoxContainer
 
 const PIXEL := preload("res://scripts/workos/pixel.gd")
 const STYLE := preload("res://scripts/workos/os_style.gd")
+const MOTION := preload("res://scripts/workos/motion.gd")
 const STATUS_NAMES := {"online": "Online", "busy": "Ocupado", "away": "Ausente", "dnd": "Não perturbe", "invisible": "Invisível", "offline": "Offline"}
 const STATUS_COLORS := {"online": Color("7ed98c"), "busy": Color("ef4b3f"), "away": Color("ffb938"), "dnd": Color("a8262a"), "invisible": Color("fff8ec"), "offline": Color("fff8ec")}
 const MUTED := Color("8f7d63")
@@ -73,7 +74,7 @@ static func _italic() -> FontVariation:
 		_italic_font.variation_transform = Transform2D(Vector2(1, 0), Vector2(0.2, 1), Vector2.ZERO)
 	return _italic_font
 
-func _picture(id: String, size: int) -> Control:
+static func _picture(id: String, size: int) -> Control:
 	var frame := PanelContainer.new()
 	frame.add_theme_stylebox_override("panel", STYLE.flat(STYLE.PAPER, STYLE.INK, 2, 0))
 	var picture := TextureRect.new()
@@ -112,6 +113,7 @@ func _me_header() -> Control:
 	me.texture = PIXEL.os_pic(str(game.profile.get("os_pic", "gato")), 4)
 	me.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	pic.add_child(me)
+	pic.size_flags_vertical = SIZE_SHRINK_BEGIN
 	row.add_child(pic)
 	var info := VBoxContainer.new()
 	info.size_flags_horizontal = SIZE_EXPAND_FILL
@@ -233,12 +235,7 @@ func _contact_row(id: String, request: bool) -> Control:
 		badge.size_flags_vertical = SIZE_SHRINK_CENTER
 		line.add_child(badge)
 	for node in line.find_children("*", "Control", true, false): node.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	row.pressed.connect(func() -> void:
-		selected = id
-		social.reading = id
-		contact.unread = 0
-		signature = ""
-		social.changed.emit())
+	row.pressed.connect(select_contact.bind(id))
 	return row
 
 func _clear_chat() -> void:
@@ -288,10 +285,19 @@ func _refresh_chat() -> void:
 	log_margin.add_child(log)
 	scroll.add_child(log_margin)
 	var previous := ""
+	var last_bubble: Control = null
 	for message in contact.log:
 		var who: String = "me" if message.mine else selected
-		log.add_child(_bubble(who, str(message.text), who == previous))
+		last_bubble = _bubble(who, str(message.text), who == previous)
+		log.add_child(last_bubble)
 		previous = who
+	# Mensagem nova: o último balão entra com animação (Motion.enter no 46-mensageiro.js); ao trocar de conversa não anima.
+	var count: int = contact.log.size()
+	if last_bubble != null and _seen.has(selected) and count > int(_seen[selected]):
+		last_bubble.ready.connect(func() -> void:
+			await last_bubble.get_tree().process_frame
+			MOTION.pop(last_bubble))
+	_seen[selected] = count
 	if social.state.threads.has(selected) and options.is_empty():
 		log.add_child(label(str(game.data.cast[selected].name).split(" ")[0] + " está digitando…", 18, MUTED, true))
 	# Rola até o fim depois de montar.
@@ -335,11 +341,24 @@ func _chat_header(id: String, contact: Dictionary) -> Control:
 	var status_row := HBoxContainer.new()
 	status_row.add_theme_constant_override("separation", 6)
 	status_row.add_child(_dot(status))
-	status_row.add_child(label("%s · %s" % [STATUS_NAMES.get(status, status), social.text(game.data.cast[id].get("role", ""))], 18, MUTED))
+	var status_text := label("%s · %s" % [STATUS_NAMES.get(status, status), social.text(game.data.cast[id].get("role", ""))], 18, MUTED)
+	status_text.size_flags_horizontal = SIZE_EXPAND_FILL
+	status_row.add_child(status_text)
 	info.add_child(status_row)
 	return header
 
 ## Balão (.msn-m): nome em cima (azul o contato, laranja você) e o texto numa caixa com contorno e sombra.
+var _seen := {}
+
+## Abre a conversa com o contato (clique na linha da lista ou no aviso).
+func select_contact(id: String) -> void:
+	if not social.state.contacts.has(id): return
+	selected = id
+	social.reading = id
+	social.state.contacts[id].unread = 0
+	signature = ""
+	social.changed.emit()
+
 func _bubble(who: String, text: String, continued: bool) -> Control:
 	var mine := who == "me"
 	var column := VBoxContainer.new()

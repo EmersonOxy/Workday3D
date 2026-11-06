@@ -5,6 +5,7 @@ extends RefCounted
 
 const PIXEL := preload("res://scripts/workos/pixel.gd")
 const STYLE := preload("res://scripts/workos/os_style.gd")
+const MOTION := preload("res://scripts/workos/motion.gd")
 const MUTED := Color("8f7d63")
 const OK := Color("2f8a45")
 const SKY := Color("c3d5ff")
@@ -82,7 +83,7 @@ static func calendar(root: VBoxContainer, game: Node) -> void:
 	var balloon_holder := VBoxContainer.new()
 	balloon_holder.custom_minimum_size.x = 270
 	body.add_child(balloon_holder)
-	var paint := func() -> void: pass
+	var holder := {}
 	var shift := func(delta: int) -> void:
 		state.month += delta
 		if state.month < 1:
@@ -92,7 +93,7 @@ static func calendar(root: VBoxContainer, game: Node) -> void:
 			state.month = 1
 			state.year += 1
 		state.selected = -1
-		paint.call()
+		holder.paint.call()
 	button(header, "◀", shift.bind(-1))
 	var title := label(header, "", 30, STYLE.INK, false)
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -102,8 +103,8 @@ static func calendar(root: VBoxContainer, game: Node) -> void:
 		state.year = int(first.year)
 		state.month = int(first.month)
 		state.selected = game.clock.today()
-		paint.call())
-	paint = func() -> void:
+		holder.paint.call())
+	holder.paint = func() -> void:
 		clear(grid)
 		clear(balloon_holder)
 		title.text = "%s de %d" % [MONTHS[int(state.month) - 1], int(state.year)]
@@ -125,10 +126,10 @@ static func calendar(root: VBoxContainer, game: Node) -> void:
 			var career_day: int = career_days.get(day, 0)
 			grid.add_child(_calendar_cell(game, day, career_day, (lead + day - 1) % 7 in [0, 6], func() -> void:
 				state.selected = career_day
-				paint.call()))
+				holder.paint.call()))
 		if int(state.selected) > 0: _calendar_balloon(balloon_holder, game, int(state.selected))
 		else: label(balloon_holder, "Clique num dia do expediente para ver os eventos.", 18, MUTED)
-	paint.call()
+	holder.paint.call()
 
 static func _events_on(game: Node, career_day: int) -> Array:
 	var found: Array = []
@@ -216,9 +217,149 @@ static func _calendar_balloon(holder: VBoxContainer, game: Node, career_day: int
 static func _step_name(id: String) -> String:
 	return {"files": "Documentos arquivados", "emails": "E-mails respondidos", "typed": "Relatórios digitados", "cafe": "Cafés", "bosses": "Escapar do chefe", "sign": "Assinar cartão", "decor": "Enfeites adquiridos", "duda": "Partidas com Duda", "buy": "Presentes comprados", "calm": "Estresse abaixo de"}.get(id, id)
 
+# ---------------------------------------------------------------- Personalizar
+
+## PERSONALIZAR.EXE (showCustomize de 30-personalizar.js): abas por categoria e prévia viva à direita.
+## Papel de parede em miniaturas, cores das janelas e da barra, crachá e cordão, e o vídeo do mundo 3D.
+static func customize(root: VBoxContainer, desk: Control) -> void:
+	var tabs_row := HBoxContainer.new()
+	tabs_row.add_theme_constant_override("separation", 6)
+	root.add_child(tabs_row)
+	var body := HBoxContainer.new()
+	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	body.add_theme_constant_override("separation", 14)
+	root.add_child(body)
+	var options := scroll(body)
+	var state := {"tab": "wall"}
+	var tab_buttons := {}
+	var holder := {}
+	var tab_names := {"wall": "Papel de parede", "os": "Cores", "badge": "Crachá", "video": "Tela 3D"}
+	for key in tab_names:
+		var tab := Button.new()
+		tab.text = tab_names[key]
+		tab.toggle_mode = true
+		tab.focus_mode = Control.FOCUS_NONE
+		tab.pressed.connect(func() -> void:
+			state.tab = key
+			holder.paint.call())
+		tabs_row.add_child(tab)
+		tab_buttons[key] = tab
+	holder.paint = func() -> void:
+		clear(options)
+		for key in tab_buttons: tab_buttons[key].set_pressed_no_signal(key == state.tab)
+		match state.tab:
+			"wall": _wallpaper_options(options, desk, holder.paint)
+			"os":
+				_swatch_row(options, "Cor das janelas", STYLE.ACCENTS, "accent", desk, holder.paint)
+				_swatch_row(options, "Barra de tarefas", STYLE.BARS, "bar", desk, holder.paint)
+			"badge":
+				_swatch_row(options, "Cor do crachá", STYLE.BADGES, "badge", desk, holder.paint)
+				_swatch_row(options, "Cordão do crachá", STYLE.BADGES, "lanyard", desk, holder.paint)
+			"video": _video_options(options, desk)
+	holder.paint.call()
+
+static func _theme_value(desk: Control, key: String, fallback: String) -> String:
+	return str(desk.settings.get_value("theme", key, fallback))
+
+static func _palette_entry(palette: Dictionary, id: String) -> Array:
+	return palette[id] if palette.has(id) else palette[palette.keys()[0]]
+
+static func _wallpaper_options(list: VBoxContainer, desk: Control, repaint: Callable) -> void:
+	label(list, "Papel de parede", 18, MUTED, false)
+	var grid := GridContainer.new()
+	grid.columns = 3
+	grid.add_theme_constant_override("h_separation", 8)
+	grid.add_theme_constant_override("v_separation", 8)
+	list.add_child(grid)
+	var current := str(desk.settings.get_value("desktop", "wallpaper", "xadrez-workos"))
+	for id in desk.WALLPAPERS:
+		var choice := Button.new()
+		choice.toggle_mode = true
+		choice.button_pressed = id == current
+		choice.focus_mode = Control.FOCUS_NONE
+		choice.custom_minimum_size = Vector2(142, 104)
+		choice.tooltip_text = desk.wallpaper_name(id)
+		var column := VBoxContainer.new()
+		column.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		column.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		column.offset_left = 8
+		column.offset_top = 6
+		column.offset_right = -8
+		column.offset_bottom = -6
+		column.add_theme_constant_override("separation", 2)
+		choice.add_child(column)
+		var thumb := TextureRect.new()
+		thumb.texture = desk.wallpaper_texture(id)
+		thumb.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		thumb.stretch_mode = TextureRect.STRETCH_TILE if id == "xadrez-workos" else TextureRect.STRETCH_SCALE
+		thumb.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		thumb.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		thumb.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		column.add_child(thumb)
+		var caption := label(column, desk.wallpaper_name(id), 16, STYLE.INK, false)
+		caption.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		caption.clip_text = true
+		choice.pressed.connect(func() -> void:
+			desk._set_wallpaper(id)
+			desk.fx.sound("click")
+			repaint.call())
+		grid.add_child(choice)
+
+## Linha de amostras quadradas (cseg de 30-personalizar.js): o nome da cor escolhida aparece ao lado do rótulo.
+static func _swatch_row(list: VBoxContainer, title: String, palette: Dictionary, key: String, desk: Control, repaint: Callable) -> void:
+	var current := _theme_value(desk, key, "bege" if key == "bar" else "azul")
+	var head := HBoxContainer.new()
+	list.add_child(head)
+	label(head, title, 18, MUTED, false)
+	var name := label(head, current.capitalize(), 18, STYLE.BLUE, false)
+	name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	name.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	var flow := HFlowContainer.new()
+	flow.add_theme_constant_override("h_separation", 6)
+	flow.add_theme_constant_override("v_separation", 6)
+	list.add_child(flow)
+	for id in palette:
+		var colors: Array = palette[id]
+		var swatch := Button.new()
+		swatch.toggle_mode = true
+		swatch.button_pressed = id == current
+		swatch.focus_mode = Control.FOCUS_NONE
+		swatch.custom_minimum_size = Vector2(46, 46)
+		swatch.tooltip_text = str(id).capitalize()
+		var base := Color(colors[0])
+		var high := Color(colors[1])
+		var shade := Color(colors[2]) if colors.size() > 2 else base.darkened(0.3)
+		var box := STYLE.bevel(base, high, shade, true, STYLE.INK, 2, 3, Vector4(0, 0, 0, 0))
+		var on_box := STYLE.bevel(base, high, shade, false, Color("f4c15d"), 3, 3, Vector4(0, 0, 0, 0))
+		for style_name in ["normal", "hover"]: swatch.add_theme_stylebox_override(style_name, box)
+		for style_name in ["pressed", "hover_pressed"]: swatch.add_theme_stylebox_override(style_name, on_box)
+		swatch.pressed.connect(func() -> void:
+			desk.set_theme_color(key, str(id))
+			desk.fx.sound("click")
+			repaint.call())
+		flow.add_child(swatch)
+	var gap := Control.new()
+	gap.custom_minimum_size.y = 6
+	list.add_child(gap)
+
+static func _video_options(list: VBoxContainer, desk: Control) -> void:
+	label(list, "Efeito de vídeo do mundo 3D", 18, MUTED, false)
+	var effects := OptionButton.new()
+	for effect_name in desk.WORLD_EFFECT_NAMES: effects.add_item(effect_name)
+	effects.selected = maxi(0, desk.WORLD_EFFECTS.find(desk.video_world()))
+	list.add_child(effects)
+	var crt := CheckBox.new()
+	crt.text = "Tela CRT no monitor"
+	crt.button_pressed = desk.video_crt()
+	list.add_child(crt)
+	effects.item_selected.connect(func(index: int) -> void: desk._set_video(desk.WORLD_EFFECTS[index], crt.button_pressed))
+	crt.toggled.connect(func(on: bool) -> void: desk._set_video(desk.WORLD_EFFECTS[effects.selected], on))
+	label(list, "PSX e VHS mudam a aparência do escritório 3D; a tela CRT só afeta o monitor.", 16, MUTED)
+
 # ---------------------------------------------------------------- Perfil (crachá)
 
-static func profile(root: VBoxContainer, game: Node, on_change: Callable) -> void:
+static func profile(root: VBoxContainer, game: Node, on_change: Callable, colors := {}) -> void:
 	var page := HBoxContainer.new()
 	page.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	page.add_theme_constant_override("separation", 18)
@@ -228,7 +369,7 @@ static func profile(root: VBoxContainer, game: Node, on_change: Callable) -> voi
 	badge_column.add_theme_constant_override("separation", 0)
 	page.add_child(badge_column)
 	var strap := ColorRect.new()
-	strap.color = STYLE.BLUE
+	strap.color = Color(colors.get("lanyard", STYLE.BLUE))
 	strap.custom_minimum_size = Vector2(26, 34)
 	strap.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	badge_column.add_child(strap)
@@ -249,7 +390,7 @@ static func profile(root: VBoxContainer, game: Node, on_change: Callable) -> voi
 	inner.add_theme_constant_override("separation", 6)
 	badge.add_child(inner)
 	var band := label(inner, "  WORKDAY LTDA.", 22, STYLE.PAPER, false)
-	band.add_theme_stylebox_override("normal", STYLE.flat(STYLE.BLUE, Color.TRANSPARENT, 0, 6))
+	band.add_theme_stylebox_override("normal", STYLE.flat(Color(colors.get("badge", STYLE.BLUE)), Color.TRANSPARENT, 0, 6))
 	var photo_frame := PanelContainer.new()
 	photo_frame.add_theme_stylebox_override("panel", STYLE.flat(SKY, STYLE.INK, 2, 4))
 	photo_frame.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
@@ -435,6 +576,7 @@ static func settings(root: VBoxContainer, desktop: Control) -> void:
 	motion.button_pressed = desktop.fx.reduced_motion
 	motion.toggled.connect(func(on: bool) -> void:
 		desktop.fx.reduced_motion = on
+		MOTION.reduced = on
 		desktop.settings.set_value("workos", "reduced_motion", on)
 		desktop.settings.save(desktop.SAVE_PATH))
 	row.call(general, "Reduzir movimento", motion)
