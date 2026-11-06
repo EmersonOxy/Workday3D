@@ -26,7 +26,7 @@ func setup(main_scene: Node3D) -> void:
 	dim.add_child(center)
 	panel = PanelContainer.new()
 	panel.custom_minimum_size = Vector2(460, 0)
-	panel.theme = load("res://scenes/workos/theme.tres")
+	panel.theme = preload("res://scripts/workos/os_style.gd").theme()
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color("#1d2433")
 	style.border_color = Color("#f1d9b5")

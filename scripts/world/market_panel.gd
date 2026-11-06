@@ -28,7 +28,7 @@ func setup(state: Node) -> void:
 	dim.add_child(center)
 	root = PanelContainer.new()
 	root.custom_minimum_size = Vector2(760, 520)
-	root.theme = load("res://scenes/workos/theme.tres")
+	root.theme = preload("res://scripts/workos/os_style.gd").theme()
 	center.add_child(root)
 	var margin := MarginContainer.new()
 	for side in ["left", "right", "top", "bottom"]: margin.add_theme_constant_override("margin_" + side, 16)

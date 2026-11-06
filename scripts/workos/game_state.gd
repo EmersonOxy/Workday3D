@@ -6,6 +6,10 @@ signal task_changed
 signal career_started
 signal day_finished(summary: Dictionary)
 signal decor_changed(owned: Array)
+## Eventos visuais do expediente (pontos flutuando, bandeja piscando, tremida): só a interface escuta.
+signal scored(points: int)
+signal failed(message: String)
+signal landed(lane: int, correct: bool)
 
 const SAVE := "user://workday_game.json"
 const DATA_PATH := "res://assets/data/workday_original.json"
@@ -344,8 +348,10 @@ func move_file(lane: int) -> void:
 	if active() and not events.has("freeze"): file.lane = clampi(lane, 0, 3)
 
 func land_file() -> void:
+	var correct: bool = file.kind != "dead" and SECTORS[int(career.order[int(file.lane)])] == file.sector
+	landed.emit(int(file.lane), correct)
 	if file.kind == "dead": fail(12, "Documento morto deve ser excluído", "dead")
-	elif SECTORS[int(career.order[int(file.lane)])] == file.sector:
+	elif correct:
 		success(20 if file.kind == "urgent" else 10)
 		stat("files")
 	else: fail(26 if file.kind == "urgent" else 14, "Setor incorreto", "wrong")
@@ -365,6 +371,7 @@ func success(base: int) -> void:
 	career.day_score += points
 	profile.best = maxi(int(profile.best), int(career.score))
 	add_stress(-2)
+	scored.emit(points)
 
 func add_stress(amount: float) -> void:
 	if career.is_empty(): return
@@ -381,7 +388,7 @@ func fail(amount: float, message: String, cause := "deadline") -> void:
 	career.combo = 0
 	career.causes[cause] = float(career.causes.get(cause, 0)) + amount
 	add_stress(amount * (1.3 if career.mod == "audit" else 1.0))
-	notice.emit(message)
+	failed.emit(message)
 
 func stat(key: String, count := 1) -> void:
 	profile.stats[key] = int(profile.stats.get(key, 0)) + count
