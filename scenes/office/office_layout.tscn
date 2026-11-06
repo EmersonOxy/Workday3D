@@ -1,33 +1,29 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://dwlxctuvfb2dc"]
 
-[ext_resource type="Script" path="res://scripts/props/fitted_prop.gd" id="fit"]
-[ext_resource type="PackedScene" path="res://scenes/biblioteca/escritorio/janela.tscn" id="janela"]
-[ext_resource type="PackedScene" path="res://scenes/biblioteca/escritorio/sofa.tscn" id="sofa"]
-[ext_resource type="PackedScene" path="res://scenes/biblioteca/escritorio/gaveteiro.tscn" id="gaveteiro"]
-[ext_resource type="PackedScene" path="res://scenes/biblioteca/escritorio/mesa_alternativa.tscn" id="mesa"]
 [ext_resource type="PackedScene" path="res://scenes/biblioteca/escritorio/cadeira_alternativa.tscn" id="cadeira"]
-[ext_resource type="PackedScene" path="res://scenes/biblioteca/escritorio/lixeira.tscn" id="lixeira"]
+[ext_resource type="PackedScene" uid="uid://2737v8xrf7lu" path="res://assets/models/biblioteca/box-for-documents-or-other-papers/source/Балончик.glb" id="caixa_doc"]
+[ext_resource type="Script" uid="uid://1yva81i7mjrj" path="res://scripts/props/fitted_prop.gd" id="fit"]
+[ext_resource type="PackedScene" path="res://scenes/biblioteca/escritorio/gaveteiro.tscn" id="gaveteiro"]
 [ext_resource type="PackedScene" path="res://scenes/biblioteca/escritorio/impressora.tscn" id="impressora"]
+[ext_resource type="PackedScene" uid="uid://b82g6mwo2e78s" path="res://assets/models/biblioteca/simple-light-switch/simple_light_switch.glb" id="interruptor"]
+[ext_resource type="PackedScene" path="res://scenes/biblioteca/escritorio/janela.tscn" id="janela"]
+[ext_resource type="PackedScene" path="res://scenes/biblioteca/escritorio/lixeira.tscn" id="lixeira"]
+[ext_resource type="PackedScene" uid="uid://dpuvn0acmcim4" path="res://assets/models/biblioteca/ceiling-light/ceiling_light.glb" id="luz_teto"]
+[ext_resource type="PackedScene" path="res://scenes/biblioteca/escritorio/mesa_alternativa.tscn" id="mesa"]
+[ext_resource type="PackedScene" uid="uid://cmwkokjgv10d" path="res://assets/models/biblioteca/psx-style-cork-board-notes-polaroids-pins/source/note and papers.fbx" id="mural"]
+[ext_resource type="PackedScene" uid="uid://cjixn0audyvrt" path="res://assets/models/biblioteca/papers/source/Papers.glb" id="papeis"]
+[ext_resource type="PackedScene" uid="uid://c07rgejb7m05f" path="res://assets/models/biblioteca/low-poly-papers-set/low-poly_papers_set.glb" id="papeis2"]
+[ext_resource type="PackedScene" uid="uid://bpflu2x22nxbj" path="res://assets/models/biblioteca/tablet-folder/source/FolderTablet.fbx" id="pasta"]
+[ext_resource type="PackedScene" uid="uid://dai4nvxvl8t4s" path="res://assets/models/biblioteca/aimaker-present-a-stack-of-old-papers/source/old_papers.fbx" id="pilha"]
+[ext_resource type="PackedScene" path="res://scenes/biblioteca/escritorio/sofa.tscn" id="sofa"]
 [ext_resource type="PackedScene" path="res://scenes/biblioteca/escritorio/telefone_fixo.tscn" id="telefone"]
-[ext_resource type="PackedScene" path="res://assets/models/biblioteca/papers/source/Papers.glb" id="papeis"]
-[ext_resource type="PackedScene" path="res://assets/models/biblioteca/tablet-folder/source/FolderTablet.fbx" id="pasta"]
-[ext_resource type="PackedScene" path="res://assets/models/biblioteca/low-poly-papers-set/low-poly_papers_set.glb" id="papeis2"]
-[ext_resource type="PackedScene" path="res://assets/models/biblioteca/box-for-documents-or-other-papers/source/Балончик.glb" id="caixa_doc"]
-[ext_resource type="PackedScene" path="res://assets/models/biblioteca/aimaker-present-a-stack-of-old-papers/source/old_papers.fbx" id="pilha"]
-[ext_resource type="PackedScene" path="res://assets/models/biblioteca/psx-style-cork-board-notes-polaroids-pins/source/note and papers.fbx" id="mural"]
-[ext_resource type="PackedScene" path="res://assets/models/biblioteca/ceiling-light/ceiling_light.glb" id="luz_teto"]
-[ext_resource type="PackedScene" path="res://assets/models/biblioteca/simple-light-switch/simple_light_switch.glb" id="interruptor"]
+
+[sub_resource type="BoxMesh" id="FrontLeft"]
+size = Vector3(6.35, 4, 0.12)
 
 [sub_resource type="StandardMaterial3D" id="WallMaterial"]
 albedo_color = Color(0.31, 0.35, 0.4, 1)
 roughness = 0.9
-
-[sub_resource type="StandardMaterial3D" id="CeilingMaterial"]
-albedo_color = Color(0.82, 0.83, 0.8, 1)
-roughness = 0.95
-
-[sub_resource type="BoxMesh" id="FrontLeft"]
-size = Vector3(6.35, 4, 0.12)
 
 [sub_resource type="BoxMesh" id="FrontRight"]
 size = Vector3(2.79, 4, 0.12)
@@ -41,53 +37,44 @@ size = Vector3(0.12, 4, 9.19)
 [sub_resource type="BoxMesh" id="Ceiling"]
 size = Vector3(10.44, 0.1, 9.19)
 
-[node name="OfficeLayout" type="Node3D"]
+[sub_resource type="StandardMaterial3D" id="CeilingMaterial"]
+albedo_color = Color(0.82, 0.83, 0.8, 1)
+roughness = 0.95
 
-[node name="Paredes" type="Node3D" parent="."]
+[node name="OfficeLayout" type="Node3D" unique_id=1392682259]
 
-[node name="FrenteEsquerda" type="MeshInstance3D" parent="Paredes"]
+[node name="Paredes" type="Node3D" parent="." unique_id=2081351947]
+
+[node name="FrenteEsquerda" type="MeshInstance3D" parent="Paredes" unique_id=57082999]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.325, 2, -5.94)
 mesh = SubResource("FrontLeft")
 surface_material_override/0 = SubResource("WallMaterial")
 
-[node name="FrenteDireita" type="MeshInstance3D" parent="Paredes"]
+[node name="FrenteDireita" type="MeshInstance3D" parent="Paredes" unique_id=1333966002]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.545, 2, -5.94)
 mesh = SubResource("FrontRight")
 surface_material_override/0 = SubResource("WallMaterial")
 
-[node name="SobrePorta" type="MeshInstance3D" parent="Paredes"]
+[node name="SobrePorta" type="MeshInstance3D" parent="Paredes" unique_id=366658361]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, 3.125, -5.94)
 mesh = SubResource("Lintel")
 surface_material_override/0 = SubResource("WallMaterial")
 
-[node name="Direita" type="MeshInstance3D" parent="Paredes"]
+[node name="Direita" type="MeshInstance3D" parent="Paredes" unique_id=986737980]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.94, 2, -1.345)
 mesh = SubResource("RightWall")
 surface_material_override/0 = SubResource("WallMaterial")
 
-[node name="Teto" type="MeshInstance3D" parent="Paredes"]
+[node name="Teto" type="MeshInstance3D" parent="Paredes" unique_id=1710760981]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.72, 3.2, -1.345)
 mesh = SubResource("Ceiling")
 surface_material_override/0 = SubResource("CeilingMaterial")
 
-[node name="Objetos" type="Node3D" parent="."]
+[node name="Objetos" type="Node3D" parent="." unique_id=279427969]
 
-[node name="Mobilia" type="Node3D" parent="Objetos"]
+[node name="Mobilia" type="Node3D" parent="Objetos" unique_id=1892090554]
 
-[node name="Papelada" type="Node3D" parent="Objetos"]
-
-[node name="Equipamentos" type="Node3D" parent="Objetos"]
-
-[node name="Decoracao" type="Node3D" parent="Objetos"]
-
-[node name="Janela" type="Node3D" parent="Objetos/Decoracao"]
-transform = Transform3D(6.12323e-17, 0, 1, 0, 1, 0, -1, 0, 6.12323e-17, -4.42, 0.9, -1.5)
-script = ExtResource("fit")
-model = ExtResource("janela")
-fit_by = 0
-size = 1.4
-
-[node name="Sofa" type="Node3D" parent="Objetos/Mobilia"]
+[node name="Sofa" type="Node3D" parent="Objetos/Mobilia" unique_id=962926360]
 transform = Transform3D(6.12323e-17, 0, -1, 0, 1, 0, 1, 0, 6.12323e-17, -3.9, 0, -3.6)
 script = ExtResource("fit")
 model = ExtResource("sofa")
@@ -95,157 +82,158 @@ fit_by = 1
 size = 2.0
 solid = true
 
-[node name="Gaveteiro" type="Node3D" parent="Objetos/Mobilia"]
-transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, -3.95, 0, 2.6)
+[node name="Gaveteiro" type="Node3D" parent="Objetos/Mobilia" unique_id=1792445342]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.95, 0, 2.6)
 script = ExtResource("fit")
 model = ExtResource("gaveteiro")
-fit_by = 0
 size = 1.2
 solid = true
 
-[node name="MesaColega1" type="Node3D" parent="Objetos/Mobilia"]
-transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 3.2, 0, -0.4)
+[node name="MesaColega1" type="Node3D" parent="Objetos/Mobilia" unique_id=961955836]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.2, 0, -0.4)
 script = ExtResource("fit")
 model = ExtResource("mesa")
 fit_by = 2
 size = 1.6
 solid = true
 
-[node name="CadeiraColega1" type="Node3D" parent="Objetos/Mobilia"]
+[node name="CadeiraColega1" type="Node3D" parent="Objetos/Mobilia" unique_id=826208556]
 transform = Transform3D(-1, 0, -1.22465e-16, 0, 1, 0, 1.22465e-16, 0, -1, 3.2, 0, -1.2)
 script = ExtResource("fit")
 model = ExtResource("cadeira")
-fit_by = 0
-size = 1.0
 solid = true
 
-[node name="MesaColega2" type="Node3D" parent="Objetos/Mobilia"]
-transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 3.2, 0, -3.0)
+[node name="MesaColega2" type="Node3D" parent="Objetos/Mobilia" unique_id=1650471084]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.2, 0, -3)
 script = ExtResource("fit")
 model = ExtResource("mesa")
 fit_by = 2
 size = 1.6
 solid = true
 
-[node name="CadeiraColega2" type="Node3D" parent="Objetos/Mobilia"]
+[node name="CadeiraColega2" type="Node3D" parent="Objetos/Mobilia" unique_id=1763029831]
 transform = Transform3D(-1, 0, -1.22465e-16, 0, 1, 0, 1.22465e-16, 0, -1, 3.2, 0, -3.8)
 script = ExtResource("fit")
 model = ExtResource("cadeira")
-fit_by = 0
-size = 1.0
 solid = true
 
-[node name="PapeisMesa1" type="Node3D" parent="Objetos/Papelada"]
+[node name="Papelada" type="Node3D" parent="Objetos" unique_id=1904864348]
+
+[node name="PapeisMesa1" type="Node3D" parent="Objetos/Papelada" unique_id=794215041]
 transform = Transform3D(0.939693, 0, -0.34202, 0, 1, 0, 0.34202, 0, 0.939693, 2.85, 0.76, -0.35)
 script = ExtResource("fit")
 model = ExtResource("papeis")
 fit_by = 1
 size = 0.35
 
-[node name="PapeisMesa1b" type="Node3D" parent="Objetos/Papelada"]
+[node name="PapeisMesa1b" type="Node3D" parent="Objetos/Papelada" unique_id=1401001333]
 transform = Transform3D(0.984808, 0, 0.173648, 0, 1, 0, -0.173648, 0, 0.984808, 3.6, 0.76, -0.3)
 script = ExtResource("fit")
 model = ExtResource("papeis2")
 fit_by = 1
 size = 0.4
 
-[node name="PastaMesa2" type="Node3D" parent="Objetos/Papelada"]
-transform = Transform3D(0.965926, 0, -0.258819, 0, 1, 0, 0.258819, 0, 0.965926, 3.5, 0.76, -3.0)
+[node name="PastaMesa2" type="Node3D" parent="Objetos/Papelada" unique_id=1268319799]
+transform = Transform3D(0.965926, 0, -0.258819, 0, 1, 0, 0.258819, 0, 0.965926, 3.5, 0.76, -3)
 script = ExtResource("fit")
 model = ExtResource("pasta")
 fit_by = 1
 size = 0.31
 
-[node name="TelefoneMesa2" type="Node3D" parent="Objetos/Equipamentos"]
-transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 2.75, 0.76, -2.95)
+[node name="CaixaDocumentos" type="Node3D" parent="Objetos/Papelada" unique_id=842463757]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.45, 0, 2.85)
+script = ExtResource("fit")
+model = ExtResource("caixa_doc")
+size = 0.4
+solid = true
+
+[node name="PilhaPapeis" type="Node3D" parent="Objetos/Papelada" unique_id=173289929]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.95, 0, 2.85)
+script = ExtResource("fit")
+model = ExtResource("pilha")
+size = 0.5
+solid = true
+
+[node name="Equipamentos" type="Node3D" parent="Objetos" unique_id=434812559]
+
+[node name="TelefoneMesa2" type="Node3D" parent="Objetos/Equipamentos" unique_id=610221132]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.75, 0.76, -2.95)
 script = ExtResource("fit")
 model = ExtResource("telefone")
 fit_by = 1
 size = 0.25
 
-[node name="Lixeira" type="Node3D" parent="Objetos/Equipamentos"]
-transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 1.15, 0, 0.4)
+[node name="Lixeira" type="Node3D" parent="Objetos/Equipamentos" unique_id=1602756210]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.15, 0, 0.4)
 script = ExtResource("fit")
 model = ExtResource("lixeira")
-fit_by = 0
 size = 0.35
 solid = true
 
-[node name="Impressora" type="Node3D" parent="Objetos/Equipamentos"]
+[node name="Impressora" type="Node3D" parent="Objetos/Equipamentos" unique_id=752360872]
 transform = Transform3D(6.12323e-17, 0, 1, 0, 1, 0, -1, 0, 6.12323e-17, 5.35, 0, 2.55)
 script = ExtResource("fit")
 model = ExtResource("impressora")
-fit_by = 0
-size = 1.0
 solid = true
 
-[node name="CaixaDocumentos" type="Node3D" parent="Objetos/Papelada"]
-transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 4.45, 0, 2.85)
+[node name="Interruptor" type="Node3D" parent="Objetos/Equipamentos" unique_id=165344380]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.45, 1.2, -5.88)
 script = ExtResource("fit")
-model = ExtResource("caixa_doc")
-fit_by = 0
-size = 0.4
-solid = true
+model = ExtResource("interruptor")
+size = 0.12
 
-[node name="PilhaPapeis" type="Node3D" parent="Objetos/Papelada"]
-transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 3.95, 0, 2.85)
+[node name="Decoracao" type="Node3D" parent="Objetos" unique_id=454274106]
+
+[node name="Janela" type="Node3D" parent="Objetos/Decoracao" unique_id=885654948]
+transform = Transform3D(6.12323e-17, 0, 1, 0, 1, 0, -1, 0, 6.12323e-17, -4.42, 0.9, -1.5)
 script = ExtResource("fit")
-model = ExtResource("pilha")
-fit_by = 0
-size = 0.5
-solid = true
+model = ExtResource("janela")
+size = 1.4
 
-[node name="Mural" type="Node3D" parent="Objetos/Decoracao"]
-transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, -2.2, 1.1, 3.17)
+[node name="Mural" type="Node3D" parent="Objetos/Decoracao" unique_id=1384450203]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.2, 1.1, 3.17)
 script = ExtResource("fit")
 model = ExtResource("mural")
 fit_by = 2
 size = 1.2
 
-[node name="Interruptor" type="Node3D" parent="Objetos/Equipamentos"]
-transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 3.45, 1.2, -5.88)
-script = ExtResource("fit")
-model = ExtResource("interruptor")
-fit_by = 0
-size = 0.12
+[node name="Luzes" type="Node3D" parent="." unique_id=743238006]
 
-[node name="Luzes" type="Node3D" parent="."]
-
-[node name="LuzTeto1" type="Node3D" parent="Luzes"]
-transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 0, 3.12, -0.5)
+[node name="LuzTeto1" type="Node3D" parent="Luzes" unique_id=1571499980]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.12, -0.5)
 script = ExtResource("fit")
 model = ExtResource("luz_teto")
 fit_by = 1
 size = 0.7
 
-[node name="Lampada1" type="OmniLight3D" parent="Luzes"]
-transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 0, 2.9, -0.5)
+[node name="Lampada1" type="OmniLight3D" parent="Luzes" unique_id=1643703630]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.9, -0.5)
 light_color = Color(1, 0.96, 0.88, 1)
 light_energy = 1.1
 omni_range = 6.5
 
-[node name="LuzTeto2" type="Node3D" parent="Luzes"]
-transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 3.2, 3.12, -1.7)
+[node name="LuzTeto2" type="Node3D" parent="Luzes" unique_id=2019200901]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.2, 3.12, -1.7)
 script = ExtResource("fit")
 model = ExtResource("luz_teto")
 fit_by = 1
 size = 0.7
 
-[node name="Lampada2" type="OmniLight3D" parent="Luzes"]
-transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 3.2, 2.9, -1.7)
+[node name="Lampada2" type="OmniLight3D" parent="Luzes" unique_id=1565487663]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.2, 2.9, -1.7)
 light_color = Color(1, 0.96, 0.88, 1)
 light_energy = 1.1
 omni_range = 6.5
 
-[node name="LuzTeto3" type="Node3D" parent="Luzes"]
-transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, -2.5, 3.12, -3.5)
+[node name="LuzTeto3" type="Node3D" parent="Luzes" unique_id=1235507594]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5, 3.12, -3.5)
 script = ExtResource("fit")
 model = ExtResource("luz_teto")
 fit_by = 1
 size = 0.7
 
-[node name="Lampada3" type="OmniLight3D" parent="Luzes"]
-transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, -2.5, 2.9, -3.5)
+[node name="Lampada3" type="OmniLight3D" parent="Luzes" unique_id=340647283]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5, 2.9, -3.5)
 light_color = Color(1, 0.96, 0.88, 1)
 light_energy = 1.1
 omni_range = 6.5
