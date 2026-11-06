@@ -13,6 +13,7 @@ var task_signature := ""
 var event_signature := ""
 var elapsed := 0.0
 
+var break_button: Button
 func setup(state: Node, host: Control) -> void:
 	game = state
 	desktop = host
@@ -81,6 +82,9 @@ func _render() -> void:
 				if game.events.has("boss"): game.dodge_boss()
 				else: game.paused = not game.paused)
 			screen.get_node("Toolbar/Coffee").pressed.connect(func() -> void: game.use_coffee())
+			break_button = button("Intervalo", func() -> void:
+				if game.career.get("on_break", false): game.end_break()
+				else: game.start_break(), screen.get_node("Toolbar"))
 			screen.get_node("Toolbar/Desktop").pressed.connect(func() -> void: game.paused = true; desktop.open_app("calendar"))
 			screen.get_node("Body/Left/Board").game = game
 			screen.get_node("Body/Left/Controls/Left").pressed.connect(func() -> void: game.move_file(int(game.file.lane) - 1))
@@ -105,8 +109,12 @@ func _process(delta: float) -> void:
 
 func _refresh() -> void:
 	if phase != "day" or not is_instance_valid(hud): return
-	var minutes := 540 + floori(float(game.career.time) / 240 * 540)
-	hud.text = "Dia %d · %02d:%02d · %s · %d pts · Estresse %d%% · R$ %d%s" % [game.day(), minutes / 60, minutes % 60, game.texts().ranks[int(game.career.rank)], game.career.day_score, game.career.stress, game.profile.wallet, " · PAUSADO" if game.paused else ""]
+	var on_break: bool = game.career.get("on_break", false)
+	hud.text = "Dia %d · %s · %s · %d pts · Estresse %d%% · R$ %d%s" % [game.day(), game.clock.text(), game.texts().ranks[int(game.career.rank)], game.career.day_score, game.career.stress, game.profile.wallet, " · INTERVALO" if on_break else " · PAUSADO" if game.paused else ""]
+	if is_instance_valid(break_button):
+		break_button.visible = game.clock.break_unlocked()
+		break_button.text = "Voltar do intervalo" if on_break else "Intervalo"
+		break_button.disabled = not on_break and not game.break_available()
 	var ids: Array = []
 	for task in game.tasks: ids.append(task.id)
 	var signature := str(ids)

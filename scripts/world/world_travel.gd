@@ -10,7 +10,6 @@ const LOCATIONS := {
 var host: Node3D
 var player: CharacterBody3D
 var location := "office"
-var punched_in := true
 var changing := false
 var exterior: Node3D
 var current_scene: Node3D
@@ -38,6 +37,9 @@ func configure(main_scene: Node3D, actor: CharacterBody3D) -> void:
 	for body in host.get_node("WorldCollisions").find_children("*", "CollisionObject3D", true, false):
 		office_collision_layers[body] = body.collision_layer
 	_build_overlay()
+
+func _game() -> Node:
+	return host.desktop.game
 
 func _process(_delta: float) -> void:
 	if feedback != null and feedback.visible and Time.get_ticks_msec() >= feedback_until:
@@ -161,9 +163,9 @@ func interaction_prompt() -> String:
 		return ""
 	match str(zone.action_id):
 		"clock":
-			return "E · Registrar entrada" if not punched_in else "E · Registrar saída"
+			return "E · Registrar saída" if _game().on_premises() else "E · Registrar entrada"
 		"office_exit":
-			return "E · Bata o ponto para sair" if punched_in else "E · Abrir porta / sair"
+			return "E · Bata o ponto para sair" if _game().on_premises() else "E · Abrir porta / sair"
 		_:
 			return "E · " + zone.prompt
 
@@ -175,10 +177,9 @@ func try_interact() -> bool:
 		return false
 	match str(zone.action_id):
 		"clock":
-			punched_in = not punched_in
-			_message("Entrada registrada." if punched_in else "Saída registrada. Você pode ir embora.")
+			_message(_game().punch())
 		"office_exit":
-			if punched_in:
+			if _game().on_premises():
 				_message("Antes de sair, registre a saída no relógio de ponto.")
 			else:
 				_start_travel(zone, "street", "FromOffice")

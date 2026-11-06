@@ -196,7 +196,8 @@ func presence(id: String) -> String:
 		if game.day() <= int(override.until): return str(override.s)
 	if game.career.get("phase", "") == "day":
 		for block in definition.get("blocks", []):
-				if game.career.time * 540.0 / 240.0 >= block[0] and game.career.time * 540.0 / 240.0 <= block[1]: return str(block[2])
+				var minute: float = game.clock.minute() - game.clock.WORK_IN
+				if minute >= block[0] and minute <= block[1]: return str(block[2])
 		return "online" if definition.get("scope", "work") == "work" else "away"
 	return "online" if id in ["lu", "duda"] else "away"
 

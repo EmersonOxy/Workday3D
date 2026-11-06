@@ -57,15 +57,14 @@ func _ready() -> void:
 	save_timer.timeout.connect(_save_notes)
 	add_child(save_timer)
 	clock_timer = Timer.new()
-	clock_timer.wait_time = 1.0
+	clock_timer.wait_time = 0.25
 	clock_timer.timeout.connect(_update_clock)
 	add_child(clock_timer)
 	clock_timer.start()
 	_update_clock()
 
 func _update_clock() -> void:
-	var now := Time.get_datetime_dict_from_system()
-	$Taskbar/Clock.text = "%02d:%02d  ·  %02d/%02d/%04d" % [now.hour, now.minute, now.day, now.month, now.year]
+	$Taskbar/Clock.text = "%s  ·  %s" % [game.clock.text(), game.clock.date_text()]
 
 func open_app(id: String) -> void:
 	if not TITLES.has(id): return

@@ -14,6 +14,8 @@ const RANK_DAYS := [1, 3, 7, 11, 16, 21, 25]
 const SALARY := [40, 52, 66, 82, 100, 120, 145]
 const SECTORS := ["fin", "rh", "jur", "ti"]
 const DAY_SECONDS := 240.0
+const CLOCK_SCRIPT := preload("res://scripts/workos/game_clock.gd")
+var clock: RefCounted
 var data: Dictionary
 var profile: Dictionary = {"name": "Funcionário", "id": 1000, "language": "pt", "difficulty": "normal", "wallet": 0, "decor": [], "stats": {}, "best": 0, "career_number": 0}
 var career: Dictionary = {}
@@ -37,6 +39,7 @@ var save_error := ""
 var rng := RandomNumberGenerator.new()
 
 func _ready() -> void:
+	clock = CLOCK_SCRIPT.new(self)
 	data = JSON.parse_string(FileAccess.get_file_as_string(DATA_PATH))
 	rng.randomize()
 	profile.id = rng.randi_range(1000, 9999)
@@ -90,7 +93,7 @@ func new_career() -> void:
 		return
 	profile.career_number += 1
 	stat("careers")
-	career = {"phase": "ready", "day": 1, "score": 0, "day_score": 0, "rank": 0, "stress": 0.0, "combo": 0, "time": 0.0, "perks": [], "today": [], "inv": {"cafe": 0, "cha": 0}, "order": [0, 1, 2, 3], "promo_day": 0, "break_day": 0, "debut": [], "mod": "first", "causes": {}, "summary": {}}
+	career = {"phase": "ready", "day": 1, "score": 0, "day_score": 0, "rank": 0, "stress": 0.0, "combo": 0, "time": 0.0, "perks": [], "today": [], "inv": {"cafe": 0, "cha": 0}, "order": [0, 1, 2, 3], "promo_day": 0, "break_day": 0, "debut": [], "mod": "first", "causes": {}, "summary": {}, "ponto": {"day": 1, "in": true}}
 	file.clear()
 	tasks.clear()
 	events.clear()
@@ -106,9 +109,13 @@ func start_day() -> void:
 		changed.emit()
 		return
 	if not career.phase in ["ready", "ended"]: return
+	if not punched_in():
+		notice.emit("Registre a entrada no relógio de ponto antes de começar o expediente.")
+		return
 	if career.phase == "ended": career.day += 1
-	career.merge({"phase": "day", "time": 0.0, "day_score": 0, "combo": 0, "stress": 0.0, "order": [0, 1, 2, 3], "debut": [], "causes": {}}, true)
+	career.merge({"phase": "day", "on_break": false, "time": 0.0, "day_score": 0, "combo": 0, "stress": 0.0, "order": [0, 1, 2, 3], "debut": [], "causes": {}}, true)
 	career.mod = "first" if career.day == 1 else ["sexta", "fecha", "home", "ar", "ti", "segunda", "audit"].pick_random()
+	clock.begin_day()
 	tasks.clear()
 	events.clear()
 	next_task = 4
@@ -122,7 +129,50 @@ func start_day() -> void:
 	changed.emit()
 
 func active() -> bool:
-	return not career.is_empty() and career.phase == "day" and not paused and focused
+	return not career.is_empty() and career.phase == "day" and not paused and focused and not career.get("on_break", false)
+
+## Relógio de ponto 3D: a entrada vale para o dia que vai começar; a saída só depois do expediente.
+func punched_in() -> bool:
+	var ponto: Dictionary = career.get("ponto", {"day": clock.today(), "in": true})
+	return ponto.get("in", false) and int(ponto.get("day", 0)) == clock.today()
+
+func on_premises() -> bool:
+	return career.is_empty() or career.get("ponto", {"in": true}).get("in", false)
+
+func punch() -> String:
+	if career.is_empty(): return "Sem carreira ativa no Portal RH."
+	if on_premises():
+		if career.phase in ["day", "promotion"]: return "Expediente em andamento: a saída é às 18:00."
+		career.ponto = {"day": int(career.get("ponto", {}).get("day", clock.today())), "in": false}
+		save_game()
+		changed.emit()
+		return "Saída registrada às %s. Você pode ir embora." % clock.text()
+	career.ponto = {"day": clock.today(), "in": true}
+	save_game()
+	changed.emit()
+	return "Entrada registrada · dia %d · %s · %s." % [clock.today(), clock.date_text(), clock.text(clock.arrival())]
+
+## Intervalo (Analista em diante, uma vez por dia): congela o expediente por 45 s reais = 1 h simulada.
+func break_available() -> bool:
+	return career.get("phase", "") == "day" and clock.break_unlocked() and int(career.get("break_day", 0)) != day() 		and not career.get("on_break", false) and not events.has("boss") and not events.has("virus") and not events.has("freeze") and clock.break_window()
+
+func start_break() -> bool:
+	if not break_available(): return false
+	clock.break_start()
+	career.break_day = day()
+	career.on_break = true
+	fast = false
+	for task in tasks: task.holding = false
+	notice.emit("Intervalo: o expediente volta em 45 segundos.")
+	changed.emit()
+	return true
+
+func end_break() -> void:
+	if not career.get("on_break", false): return
+	clock.break_end()
+	career.on_break = false
+	save_game()
+	changed.emit()
 
 func set_focus(value: bool) -> void:
 	focused = value
@@ -155,12 +205,16 @@ func frequency(id: String) -> float:
 	return minf(1.0, 0.3 + 0.14 * (day() - int(data.debut[id]))) if available(id) else 0.0
 
 func _process(delta: float) -> void:
+	if not career.is_empty() and career.get("phase", "") == "day" and career.get("on_break", false):
+		if clock.break_tick(delta): end_break()
+		return
 	if not active(): return
 	var dt := minf(delta, 0.05)
 	career.time += dt
 	if career.time >= DAY_SECONDS:
 		finish_day()
 		return
+	clock.work_tick()
 	var sdt := dt * (0.4 if slow_time > 0 else 1.0) * (0.85 if career.mod == "sexta" else 1.0)
 	slow_time = maxf(0, slow_time - dt)
 	coffee_time = maxf(0, coffee_time - dt)
