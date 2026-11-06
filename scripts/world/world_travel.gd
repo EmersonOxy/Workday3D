@@ -190,6 +190,9 @@ func _nearest_zone() -> Area3D:
 func interaction_prompt() -> String:
 	if player == null or player.mode != player.Mode.FREE:
 		return ""
+	var task_prompt: String = host.office_tasks.prompt() if host.get("office_tasks") != null else ""
+	if not task_prompt.is_empty():
+		return task_prompt
 	var zone := _nearest_zone()
 	if zone == null:
 		return ""

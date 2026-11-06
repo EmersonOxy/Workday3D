@@ -6,6 +6,7 @@ extends Control
 
 signal exit_requested
 signal video_changed(world: String, crt: bool)
+signal os_theme_changed
 
 const MUSIC_SCRIPT := preload("res://scripts/workos_music.gd")
 const GAME_SCRIPT := preload("res://scripts/workos/game_state.gd")
@@ -18,6 +19,8 @@ const OS_APPS := preload("res://scripts/workos/os_apps.gd")
 const ARCADE_APP := preload("res://scripts/workos/arcade_app.gd")
 const PIXEL := preload("res://scripts/workos/pixel.gd")
 const STYLE := preload("res://scripts/workos/os_style.gd")
+const MOTION := preload("res://scripts/workos/motion.gd")
+const NOTIFY := preload("res://scripts/workos/notifications.gd")
 const SAVE_PATH := "user://workos.cfg"
 const WORLD_EFFECTS := ["off", "psx", "vhs", "psx_vhs"]
 const WORLD_EFFECT_NAMES := ["Desligado", "PSX", "VHS", "PSX + VHS"]
@@ -41,9 +44,9 @@ const APP_INFO := {
 	"about": ["SOBRE.TXT", "Sobre o WorkOS"],
 }
 const DESKTOP_ICONS := ["workday", "calendar", "calc", "notes", "music", "settings", "profile", "archive", "shop", "arcade", "messenger"]
-const WINDOW_SIZES := {"workday": Vector2(1080, 620), "calendar": Vector2(1040, 620), "archive": Vector2(900, 600), "messenger": Vector2(900, 600),
-	"music": Vector2(640, 540), "calc": Vector2(380, 520), "notes": Vector2(620, 480), "settings": Vector2(620, 560), "profile": Vector2(820, 600),
-	"backup": Vector2(620, 460), "about": Vector2(560, 420), "config": Vector2(720, 560), "shop": Vector2(880, 600), "arcade": Vector2(620, 620)}
+const WINDOW_SIZES := {"workday": Vector2(1080, 620), "calendar": Vector2(1040, 580), "archive": Vector2(900, 600), "messenger": Vector2(900, 600),
+	"music": Vector2(640, 500), "calc": Vector2(380, 520), "notes": Vector2(620, 480), "settings": Vector2(540, 520), "profile": Vector2(820, 570),
+	"backup": Vector2(620, 460), "about": Vector2(520, 270), "config": Vector2(720, 500), "shop": Vector2(880, 600), "arcade": Vector2(620, 410)}
 
 var music: Node
 var game: Node
@@ -66,6 +69,7 @@ var start_button: TextureButton
 var start_menu: Control
 var clock_label: Label
 var toast_layer: VBoxContainer
+var notice_layer: VBoxContainer
 var power_layer: ColorRect
 var powered := true
 var booting := false
@@ -87,6 +91,7 @@ func _ready() -> void:
 	fx.sound_enabled = bool(settings.get_value("workos", "sfx", true))
 	fx.volume = float(settings.get_value("workos", "sfx_volume", 0.35))
 	fx.reduced_motion = bool(settings.get_value("workos", "reduced_motion", false))
+	MOTION.reduced = fx.reduced_motion
 	for child in get_children():
 		if child is CanvasItem and not child in [game, social, fx, music]: child.queue_free()
 	_build_wallpaper()
@@ -102,10 +107,19 @@ func _ready() -> void:
 	_build_start_menu()
 	_build_power_layer()
 	_set_wallpaper(str(settings.get_value("desktop", "wallpaper", "xadrez-workos")), false)
+	apply_theme()
 	game.notice.connect(func(message: String) -> void: toast("WorkOS", message))
 	social.incoming.connect(func(npc: String, message: String) -> void:
-		toast("MSworkN · " + str(game.data.cast[npc].name), message, "messenger")
+		fx.sound("msnIn")
+		msn_toast(npc, str(game.data.cast[npc].name), message)
 		_refresh_badges())
+	social.requested.connect(func(npc: String) -> void:
+		fx.sound("msnReq")
+		msn_toast(npc, "Nova solicitação de contato", str(game.data.cast[npc].name))
+		_refresh_badges())
+	social.came_online.connect(func(npc: String) -> void:
+		fx.sound("msnOn")
+		msn_toast(npc, "%s está online" % str(game.data.cast[npc].name), "", true))
 	social.changed.connect(_refresh_badges)
 	save_timer = Timer.new()
 	save_timer.wait_time = 0.4
@@ -141,6 +155,31 @@ func _checker_texture() -> Texture2D:
 	image.fill_rect(Rect2i(0, 0, 8, 8), Color("234f57"))
 	image.fill_rect(Rect2i(8, 8, 8, 8), Color("234f57"))
 	return ImageTexture.create_from_image(image)
+
+func wallpaper_name(id: String) -> String:
+	return "Xadrez WorkOS" if id == "xadrez-workos" else id.replace("-", " ").capitalize()
+
+func wallpaper_texture(id: String) -> Texture2D:
+	return _checker_texture() if id == "xadrez-workos" else load("res://assets/ui/workos/wallpapers/%s.png" % id)
+
+## Cores do Personalizar (applyOsTheme): janelas, barra de tarefas, crachá e cordão. Salvas em user://workos.cfg.
+func set_theme_color(key: String, id: String) -> void:
+	settings.set_value("theme", key, id)
+	settings.save(SAVE_PATH)
+	apply_theme()
+
+func apply_theme() -> void:
+	var accent := str(settings.get_value("theme", "accent", "azul"))
+	for key in windows: windows[key].set_accent(accent)
+	var bars: Array = STYLE.BARS.get(str(settings.get_value("theme", "bar", "bege")), STYLE.BARS.bege)
+	# A textura da barra é bege (c7b595): as outras cores a tingem proporcionalmente.
+	var base := Color(STYLE.BARS.bege[0])
+	var target := Color(bars[0])
+	taskbar.self_modulate = Color(minf(target.r / base.r, 2.0), minf(target.g / base.g, 2.0), minf(target.b / base.b, 2.0))
+	os_theme_changed.emit()
+
+func theme_color(key: String, fallback: String) -> String:
+	return str(settings.get_value("theme", key, fallback))
 
 func _set_wallpaper(id: String, persist := true) -> void:
 	if not id in WALLPAPERS: id = "xadrez-workos"
@@ -579,47 +618,69 @@ func _build_toasts() -> void:
 	toast_layer.add_theme_constant_override("separation", 8)
 	toast_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(toast_layer)
+	# Recados do RH ficam no canto superior direito (body.office #toast { top: 3.4em; right: .8em }).
+	notice_layer = VBoxContainer.new()
+	notice_layer.name = "Notices"
+	notice_layer.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+	notice_layer.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	notice_layer.offset_right = -12
+	notice_layer.offset_top = 14
+	notice_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(notice_layer)
 
-## Balão no canto (como os avisos do MSworkN no HTML): barra azul com o título e o texto embaixo.
+## Mostra um cartão numa camada de um aviso por vez: o novo substitui o antigo. O suporte reserva o espaço dentro do
+## contêiner e o cartão anima dentro dele (Motion.enter/leave). `wobble` = envelope que chacoalha depois de assentar.
+func _present(layer: VBoxContainer, card: Control, from_side: String, hold: float, envelope: Control = null) -> void:
+	for old in layer.get_children(): old.free()
+	var holder := Control.new()
+	holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	layer.add_child(holder)
+	holder.add_child(card)
+	card.position = Vector2.ZERO
+	holder.custom_minimum_size = card.get_combined_minimum_size()
+	# Textos com quebra de linha só informam a altura depois de ter largura: mede em dois quadros.
+	await get_tree().process_frame
+	if not is_instance_valid(card): return
+	card.size = Vector2(holder.custom_minimum_size.x, 0)
+	await get_tree().process_frame
+	if not is_instance_valid(card): return
+	card.size = card.get_combined_minimum_size().max(card.size)
+	holder.custom_minimum_size = card.size
+	var entering := MOTION.enter(card, from_side)
+	if envelope != null and entering != null: entering.finished.connect(func() -> void: NOTIFY.wobble(envelope))
+	await get_tree().create_timer(hold).timeout
+	if is_instance_valid(card) and is_instance_valid(holder):
+		MOTION.leave(card, from_side, func() -> void:
+			if is_instance_valid(holder): holder.queue_free())
+
+## Recado do RH (toast do original): envelope, "De: …" e texto, no canto superior direito.
 func toast(title: String, message: String, app := "") -> void:
 	if message.is_empty(): return
-	var card := PanelContainer.new()
-	card.custom_minimum_size = Vector2(340, 0)
-	card.add_theme_stylebox_override("panel", STYLE.bevel(STYLE.PAPER, Color.WHITE, STYLE.TAN, true, STYLE.INK, 2, 2, Vector4(0, 0, 0, 6)))
-	card.mouse_filter = Control.MOUSE_FILTER_STOP
-	var column := VBoxContainer.new()
-	column.add_theme_constant_override("separation", 4)
-	card.add_child(column)
-	var head := Label.new()
-	head.text = "  " + title
-	head.add_theme_font_size_override("font_size", 18)
-	head.add_theme_color_override("font_color", STYLE.PAPER)
-	head.add_theme_stylebox_override("normal", STYLE.flat(STYLE.BLUE, Color.TRANSPARENT, 0, 2))
-	column.add_child(head)
-	var text := Label.new()
-	text.text = message
-	text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	text.custom_minimum_size.x = 320
-	text.add_theme_font_size_override("font_size", 19)
-	var margin := MarginContainer.new()
-	margin.add_theme_constant_override("margin_left", 10)
-	margin.add_theme_constant_override("margin_right", 10)
-	margin.add_child(text)
-	column.add_child(margin)
+	var card := NOTIFY.notice_card(title, message)
 	if app != "":
 		card.gui_input.connect(func(event: InputEvent) -> void:
 			if event is InputEventMouseButton and event.pressed:
 				open_app(app)
-				card.queue_free())
-	toast_layer.add_child(card)
-	while toast_layer.get_child_count() > 3: toast_layer.get_child(0).free()
+				card.get_parent().queue_free())
 	fx.sound("notify")
-	card.modulate.a = 0.0
-	var tween := card.create_tween()
-	tween.tween_property(card, "modulate:a", 1.0, 0.15)
-	tween.tween_interval(4.5)
-	tween.tween_property(card, "modulate:a", 0.0, 0.3)
-	tween.tween_callback(card.queue_free)
+	_present(notice_layer, card, "right", 4.3, card.get_node("HBoxContainer/Envelope") if card.has_node("HBoxContainer/Envelope") else null)
+
+## Aviso do MSworkN (.msn-toast): foto do contato, "MSworkN", nome e texto; clicar abre a conversa.
+func msn_toast(npc: String, title: String, text: String, small := false) -> void:
+	var picture: Control = MSN_APP._picture(npc, 34 if small else 40)
+	var card := NOTIFY.msn_card(picture, "MSworkN", title, text, small)
+	card.gui_input.connect(func(event: InputEvent) -> void:
+		if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+			card.get_parent().queue_free()
+			open_messenger_with(npc))
+	_present(toast_layer, card, "down", 3.2 if small else 4.5)
+
+func open_messenger_with(npc: String) -> void:
+	open_app("messenger")
+	await get_tree().process_frame
+	if not windows.has("messenger"): return
+	for child in windows["messenger"].content.get_children():
+		if child.has_method("select_contact"): child.select_contact(npc)
 
 # ---------------------------------------------------------------- Janelas
 
@@ -641,6 +702,7 @@ func open_app(id: String) -> void:
 	var cascade := Vector2(26, 22) * (windows.size() % 6)
 	window.position = (((area - window.size) / 2.0).floor() + cascade - Vector2(60, 40)).clamp(Vector2.ZERO, area - window.size)
 	windows[id] = window
+	window.set_accent(str(settings.get_value("theme", "accent", "azul")))
 	window.activated.connect(_focus.bind(id))
 	window.closed.connect(_close.bind(id))
 	window.minimize_requested.connect(_minimize.bind(id))
@@ -652,7 +714,7 @@ func open_app(id: String) -> void:
 		window.paper.add_theme_stylebox_override("panel", STYLE.flat(STYLE.PAPER, Color.TRANSPARENT, 0, 0))
 	elif id == "arcade":
 		app = ARCADE_APP.new()
-	elif id in ["calendar", "profile", "archive", "config", "shop"]:
+	elif id in ["calendar", "profile", "archive", "config", "shop", "settings"]:
 		app = VBoxContainer.new()
 		app.add_theme_constant_override("separation", 10)
 	else:
@@ -667,17 +729,28 @@ func open_app(id: String) -> void:
 		"archive": OS_APPS.archive(app, game)
 		"config": OS_APPS.settings(app, self)
 		"shop": OS_APPS.catalog(app, game)
-		"arcade": app.setup(game, fx)
+		"arcade":
+			# O menu do Arcade é baixo e os jogos precisam do quadro 128×160 ampliado: a janela acompanha a tela.
+			app.layout_wanted.connect(func(wanted: Vector2) -> void: _resize_window("arcade", wanted))
+			app.setup(game, fx)
 		"messenger": app.setup(social)
-		"profile": OS_APPS.profile(app, game, func() -> void: toast("WorkOS", "Crachá atualizado."))
+		"profile": OS_APPS.profile(app, game, func() -> void: toast("WorkOS", "Crachá atualizado."), {"badge": STYLE.BADGES.get(theme_color("badge", "azul"), STYLE.BADGES.azul)[1], "lanyard": STYLE.BADGES.get(theme_color("lanyard", "azul"), STYLE.BADGES.azul)[1]})
 		"backup": APPS.backup(app, game)
 		"notes": _build_notes(app)
 		"calc": _build_calculator(app)
-		"settings": _build_settings(app)
+		"settings": OS_APPS.customize(app, self)
 		"music": music.build_ui(app)
 	_focus(id)
 	fx.sound("open")
 	window.play_open()
+
+## Redimensiona a janela do app (mantém o canto superior esquerdo dentro da área de trabalho).
+func _resize_window(id: String, wanted: Vector2) -> void:
+	if not windows.has(id): return
+	var window: Control = windows[id]
+	var area := window_layer.size
+	window.size = wanted.min(area - Vector2(10, 6))
+	window.position = window.position.clamp(Vector2.ZERO, (area - window.size).max(Vector2.ZERO))
 
 func _focus(id: String) -> void:
 	if not windows.has(id): return
@@ -755,55 +828,49 @@ func _build_calculator(parent: Control) -> void:
 	display.add_theme_stylebox_override("normal", STYLE.bevel(Color("dfe9d8"), Color("9aa89a"), STYLE.PAPER, false, STYLE.INK, 2, 2, Vector4(12, 4, 12, 4)))
 	display.add_theme_stylebox_override("focus", STYLE.bevel(Color("dfe9d8"), Color("9aa89a"), STYLE.PAPER, false, STYLE.BLUE, 2, 2, Vector4(12, 4, 12, 4)))
 	display.text_submitted.connect(func(_text: String) -> void: _calculate(display))
-	for button in parent.get_node("Keys").get_children():
-		button.pressed.connect(_calculator_key.bind(button.text, display))
+	# Mesmo teclado do original: C ← % ÷ / 7 8 9 × / 4 5 6 − / 1 2 3 + / 0 . ± =
+	var layout := ["C", "←", "%", "÷", "7", "8", "9", "×", "4", "5", "6", "-", "1", "2", "3", "+", "0", ".", "±", "="]
+	var keys := parent.get_node("Keys").get_children()
+	for index in keys.size():
+		keys[index].text = layout[index]
+		keys[index].pressed.connect(_calculator_key.bind(layout[index], display))
+	display.text_changed.connect(func(_text: String) -> void: pass)
 
 func _calculator_key(key: String, display: LineEdit) -> void:
 	fx.sound("click")
+	if display.text == "Erro": display.text = ""
 	match key:
 		"C": display.text = ""
-		"⌫": display.text = display.text.left(-1)
+		"←": display.text = display.text.left(-1)
 		"=": _calculate(display)
+		"±": display.text = display.text.substr(1) if display.text.begins_with("-") else ("-" + display.text if not display.text.is_empty() else "")
+		"%":
+			if display.text.is_valid_float(): display.text = _format_number(float(display.text) / 100.0)
 		_: display.text += key
 
+func _format_number(value: float) -> String:
+	var rounded := snappedf(value, 0.0000001)
+	return str(int(rounded)) if is_equal_approx(rounded, floorf(rounded)) and absf(rounded) < 1.0e15 else str(rounded)
+
 func _calculate(display: LineEdit) -> void:
-	for character in display.text:
+	var text := display.text.replace("÷", "/").replace("×", "*").replace(",", ".").replace("−", "-")
+	if text.strip_edges().is_empty(): return
+	for character in text:
 		if not character in "0123456789.+-*/() ":
 			display.text = "Erro"
 			return
+	# Inteiros viram decimais: o Expression do Godot faz divisão inteira (1/4 = 0).
+	var integers := RegEx.create_from_string(r"(?<![\d.])(\d+)(?![\d.])")
+	text = integers.sub(text, "$1.0", true)
 	var expression := Expression.new()
-	if expression.parse(display.text) != OK:
+	if expression.parse(text) != OK:
 		display.text = "Erro"
 		return
 	var result: Variant = expression.execute([], null, false)
-	display.text = "Erro" if expression.has_execute_failed() else str(result)
-
-func _build_settings(parent: Control) -> void:
-	var options: OptionButton = parent.get_node("Wallpapers")
-	for wall in WALLPAPERS: options.add_item("Xadrez WorkOS" if wall == "xadrez-workos" else wall.replace("-", " ").capitalize())
-	options.selected = maxi(0, WALLPAPERS.find(str(settings.get_value("desktop", "wallpaper", "xadrez-workos"))))
-	options.item_selected.connect(func(index: int) -> void: _set_wallpaper(WALLPAPERS[index]))
-	var effect_label := Label.new()
-	effect_label.text = "Efeito de vídeo do mundo 3D"
-	parent.add_child(effect_label)
-	var effects := OptionButton.new()
-	for effect_name in WORLD_EFFECT_NAMES: effects.add_item(effect_name)
-	effects.selected = maxi(0, WORLD_EFFECTS.find(video_world()))
-	parent.add_child(effects)
-	var crt := CheckBox.new()
-	crt.text = "Tela CRT no monitor"
-	crt.button_pressed = video_crt()
-	parent.add_child(crt)
-	effects.item_selected.connect(func(index: int) -> void: _set_video(WORLD_EFFECTS[index], crt.button_pressed))
-	crt.toggled.connect(func(on: bool) -> void: _set_video(WORLD_EFFECTS[effects.selected], on))
-	for node in [effect_label, effects, crt]: parent.move_child(node, parent.get_node("Preview").get_index())
-	var preview: TextureRect = parent.get_node("Preview")
-	preview.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	var sync_preview := func() -> void:
-		preview.texture = wallpaper.texture
-		preview.stretch_mode = TextureRect.STRETCH_TILE if wallpaper.stretch_mode == TextureRect.STRETCH_TILE else TextureRect.STRETCH_KEEP_ASPECT_COVERED
-	sync_preview.call()
-	options.item_selected.connect(func(_index: int) -> void: sync_preview.call())
+	if expression.has_execute_failed() or not (result is float or result is int) or is_inf(float(result)) or is_nan(float(result)):
+		display.text = "Erro"
+	else:
+		display.text = _format_number(float(result)) if result is float else str(result)
 
 func video_world() -> String:
 	return str(settings.get_value("video", "world", "psx"))
@@ -824,8 +891,7 @@ func dismiss_menu() -> bool:
 		_close_start_menu()
 		return true
 	if current_app == "workday" and game.career.get("phase", "") == "day" and not game.paused:
-		if game.events.has("boss"): game.dodge_boss()
-		else: game.paused = true
+		game.paused = true
 		return true
 	return false
 

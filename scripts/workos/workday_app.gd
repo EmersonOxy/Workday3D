@@ -7,6 +7,7 @@ extends VBoxContainer
 const BOARD := preload("res://scripts/workos/work_board.gd")
 const PIXEL := preload("res://scripts/workos/pixel.gd")
 const STYLE := preload("res://scripts/workos/os_style.gd")
+const MOTION := preload("res://scripts/workos/motion.gd")
 const SECTOR_COLORS := {"fin": Color("6fbf73"), "rh": Color("f0915f"), "jur": Color("6f93d9"), "ti": Color("a983d6")}
 const MUTED := Color("8f7d63")
 const OK := Color("2f8a45")
@@ -122,7 +123,7 @@ func _render_portal() -> void:
 	add_child(scroll)
 	var page := VBoxContainer.new()
 	page.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	page.add_theme_constant_override("separation", 14)
+	page.add_theme_constant_override("separation", 10)
 	scroll.add_child(page)
 	# Topo: foto + logotipo + slogan (.mw-hero).
 	var hero := HBoxContainer.new()
@@ -133,8 +134,8 @@ func _render_portal() -> void:
 	face_frame.add_theme_stylebox_override("panel", STYLE.flat(Color("c3d5ff"), STYLE.INK, 3, 4))
 	hero.add_child(face_frame)
 	var face := TextureRect.new()
-	face.custom_minimum_size = Vector2(112, 112)
-	face.texture = PIXEL.os_pic(str(game.profile.get("os_pic", "gato")), 8)
+	face.custom_minimum_size = Vector2(88, 88)
+	face.texture = PIXEL.os_pic(str(game.profile.get("os_pic", "gato")), 6)
 	face.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	face.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	face.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
@@ -143,7 +144,7 @@ func _render_portal() -> void:
 	brand.alignment = BoxContainer.ALIGNMENT_CENTER
 	hero.add_child(brand)
 	var logo := TextureRect.new()
-	logo.texture = PIXEL.logo(5)
+	logo.texture = PIXEL.logo(4)
 	logo.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	brand.add_child(logo)
 	label(ui_text("tagline", ""), brand, 18, MUTED).custom_minimum_size.x = 300
@@ -170,12 +171,20 @@ func _render_portal() -> void:
 	if phase in ["burnout", "won", "resigned"]:
 		var banner := label({"burnout": ui_text("burnoutTitle", "Afastamento por estresse"), "won": ui_text("winTitle", "Carreira concluída"), "resigned": "Demissão registrada"}[phase], page, 24, DANGER if phase != "won" else OK)
 		banner.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		banner.ready.connect(func() -> void:
+			await banner.get_tree().create_timer(0.35).timeout
+			MOTION.stamp(banner))
 	elif phase == "ended" and game.career.get("summary", {}) is Dictionary and not game.career.summary.is_empty():
-		page.add_child(_summary_card(game.career.summary))
+		var summary := _summary_card(game.career.summary)
+		page.add_child(summary)
+		summary.ready.connect(func() -> void:
+			await summary.get_tree().create_timer(0.3).timeout
+			MOTION.squash(summary))
 	# Botões do portal (.menu .pxbtn), centralizados.
-	var menu := VBoxContainer.new()
-	menu.add_theme_constant_override("separation", 10)
-	menu.custom_minimum_size.x = 330
+	var menu := GridContainer.new()
+	menu.columns = 2
+	menu.add_theme_constant_override("h_separation", 10)
+	menu.add_theme_constant_override("v_separation", 8)
 	menu.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	page.add_child(menu)
 	var buttons: Array = []
@@ -208,8 +217,8 @@ func _render_portal() -> void:
 func _menu_button(text: String, icon: String, parent: Node, main := false) -> Button:
 	var item := button(text, func() -> void: pass, parent, PIXEL.menu_icon(icon, 2))
 	item.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	item.custom_minimum_size = Vector2(330, 52)
-	item.add_theme_font_size_override("font_size", 26)
+	item.custom_minimum_size = Vector2(330, 46)
+	item.add_theme_font_size_override("font_size", 24)
 	item.add_theme_constant_override("h_separation", 14)
 	if main:
 		var box := STYLE.bevel(STYLE.INK, STYLE.INK2, Color("120c14"), true, STYLE.INK, 2, 3, Vector4(16, 6, 16, 8))
@@ -423,7 +432,9 @@ func _refresh() -> void:
 	var on_break: bool = game.career.get("on_break", false)
 	hud.clock.text = " " + game.clock.text() + " "
 	hud.day.text = "%s [color=#2a1f2d]%d[/color]" % [ui_text("day", "Dia"), game.day()]
-	hud.points.text = "%s [color=#2a1f2d]%d[/color]" % [ui_text("points", "Pontos"), int(game.career.day_score)]
+	var points_text := "%s [color=#2a1f2d]%d[/color]" % [ui_text("points", "Pontos"), int(game.career.day_score)]
+	if hud.points.text != points_text and not hud.points.text.is_empty(): MOTION.punch(hud.points, 1.2)
+	hud.points.text = points_text
 	var multiplier := 1 + int(game.career.combo) / 8
 	# Combo: âmbar a partir de ×4, com sombra em pixel (#combo.hot).
 	hud.combo.text = "Combo [color=%s]×%d[/color]" % ["#c47a14" if multiplier >= 4 else "#2a1f2d", multiplier]
@@ -488,7 +499,9 @@ func _task_card(task: Dictionary) -> Dictionary:
 	column.add_child(timer)
 	# Entrada do cartão: cresce de 90 % e aparece (keyframes pop).
 	card.modulate.a = 0.0
-	card.create_tween().tween_property(card, "modulate:a", 1.0, 0.15)
+	card.ready.connect(func() -> void:
+		await card.get_tree().process_frame
+		MOTION.pop(card))
 	return {"card": card, "actions": actions, "timer": timer}
 
 func _build_tasks() -> void:
@@ -524,14 +537,9 @@ func _build_tasks() -> void:
 				panel.add_child(input)
 				input.text_submitted.connect(func(value: String) -> void: game.task_action(id, value))
 			"call":
-				var phone := button("%s (%.1f s)" % [ui_text("hold", "segure"), task.need], func() -> void: pass, panel)
-				phone.button_down.connect(func() -> void: task.holding = true)
-				phone.button_up.connect(func() -> void: task.holding = false; task.held = 0.0)
+				label("Atenda o telefone da sua mesa: mire nele e segure E.", panel, 18, MUTED)
 			"printer":
-				label("%s %s · %d×" % [ui_text("press", "aperte"), " / ".join(task.keys), task.need], panel, 18, MUTED)
-				var keys := HBoxContainer.new()
-				panel.add_child(keys)
-				for key in task.keys: button(key, game.task_action.bind(id, key), keys)
+				label("A impressora travou! Vá até o canto da sala e conserte os círculos brilhantes.", panel, 18, MUTED)
 			"video": button(ui_text("accept", "Aceitar"), game.task_action.bind(id, ""), panel)
 
 func _build_events() -> void:
@@ -539,8 +547,7 @@ func _build_events() -> void:
 		event_box.remove_child(child)
 		child.queue_free()
 	if game.events.has("boss"):
-		var boss := button("%s  Abrir a planilha (Esc)" % ui_text("bossComing", "O CHEFE VEM AÍ!"), game.dodge_boss, event_box, PIXEL.sprite("crown", 2))
-		boss.add_theme_color_override("font_color", DANGER)
+		var boss := label("%s  Corra até a cadeira e sente!" % ui_text("bossComing", "O CHEFE VEM AÍ!"), event_box, 22, DANGER)
 	if game.events.has("virus"):
 		var virus := button("%s  ✕ (%d)" % [ui_text("warning", "AVISO!!!"), game.events.virus], game.close_virus, event_box, PIXEL.sprite("virus", 2))
 		virus.add_theme_color_override("font_color", DANGER)

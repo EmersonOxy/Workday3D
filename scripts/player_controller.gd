@@ -470,7 +470,8 @@ func _update_hint() -> void:
 	if host.is_zoomed or host.is_transitioning:
 		hint.text = ""
 	elif mode == Mode.SEATED:
-		hint.text = "E · Levantar   |   Clique no monitor · Usar PC"
+		var seated_prompt: String = host.office_tasks.prompt() if host.get("office_tasks") != null else ""
+		hint.text = seated_prompt if not seated_prompt.is_empty() else "E · Levantar   |   Clique no monitor · Usar PC"
 	elif mode == Mode.FREE:
 		var world_prompt: String = host.travel.interaction_prompt() if host.get("travel") != null else ""
 		hint.text = world_prompt if not world_prompt.is_empty() else ("E · Sentar" if host.travel.location == "office" and _near_chair() else "W A S D · Caminhar")

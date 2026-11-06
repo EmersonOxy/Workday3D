@@ -10,6 +10,8 @@ signal decor_changed(owned: Array)
 signal scored(points: int)
 signal failed(message: String)
 signal landed(lane: int, correct: bool)
+## Tarefa que se resolve no escritório 3D (telefone, impressora): o WorkOS só mostra o aviso.
+signal physical_task(task: Dictionary)
 
 const SAVE := "user://workday_game.json"
 const DATA_PATH := "res://assets/data/workday_original.json"
@@ -30,6 +32,9 @@ var file: Dictionary = {}
 var tasks: Array = []
 var events: Dictionary = {}
 var focused := false
+## O expediente corre fora do computador: `running` liga no começo do dia (ou ao voltar ao PC num save em andamento).
+var running := false
+var debug_unlock := false
 var paused := true
 var fast := false
 var next_task := 4.0
@@ -110,6 +115,7 @@ func start_day() -> void:
 	if career.is_empty(): return
 	if career.phase == "day":
 		paused = false
+		running = true
 		changed.emit()
 		return
 	if not career.phase in ["ready", "ended"]: return
@@ -128,12 +134,14 @@ func start_day() -> void:
 	coffee_time = 0
 	slow_time = 0
 	paused = false
+	running = true
 	spawn_file()
 	save_game()
 	changed.emit()
 
 func active() -> bool:
-	return not career.is_empty() and career.phase == "day" and not paused and focused and not career.get("on_break", false)
+	# A pausa de janelas (outros apps abertos) só vale com o jogador olhando o monitor; longe dele o tempo corre.
+	return not career.is_empty() and career.phase == "day" and running and not (paused and focused) and not career.get("on_break", false)
 
 ## Relógio de ponto 3D: a entrada vale para o dia que vai começar; a saída só depois do expediente.
 func punched_in() -> bool:
@@ -249,6 +257,7 @@ func end_break() -> void:
 
 func set_focus(value: bool) -> void:
 	focused = value
+	if value and career.get("phase", "") == "day": running = true
 	if not value:
 		fast = false
 		for task in tasks: task.holding = false
@@ -271,6 +280,7 @@ func has_perk(id: String) -> bool:
 	return id in career.get("perks", []) or id in career.get("today", [])
 
 func available(id: String) -> bool:
+	if debug_unlock: return true
 	var debut: int = int(data.debut.get(id, 999))
 	return day() > debut or (day() == debut and float(career.get("time", 0)) >= 20)
 
@@ -442,8 +452,13 @@ func spawn_task(forced := "") -> bool:
 			task.ttl = 8
 			task.text = "Convite de reunião"
 	task.ttl *= speed
+	# Ligação e impressora acontecem no escritório 3D (telefone da mesa e impressora do canto); o prazo continua aqui.
+	task.physical = type in ["call", "printer"]
+	# Prazo maior nas tarefas físicas: o jogador precisa levantar e andar (telefone fica na mesa; a impressora é longe).
+	if task.physical: task.ttl *= (3.6 if type == "printer" else 1.6)
 	tasks.append(task)
 	task_changed.emit()
+	if task.physical: physical_task.emit(task)
 	return true
 
 func get_task(id: int) -> Dictionary:
@@ -503,11 +518,11 @@ func spawn_event(forced := "") -> bool:
 	var id: String = forced if not forced.is_empty() else ("" if options.is_empty() else options.pick_random())
 	if not id in options: return false
 	match id:
-		"boss": events.boss = (4.0 if day() <= 5 else maxf(2, 3.2 - (day() - 6) * 0.08)) + (1 if has_perk("relacoes") else 0)
+		"boss": events.boss = (4.0 if day() <= 5 else maxf(2, 3.2 - (day() - 6) * 0.08)) + (1 if has_perk("relacoes") else 0) + 6.0   # + tempo de correr até a cadeira
 		"shuffle": events.shuffle = 1.3
 		"freeze": events.freeze = {"hits": 0, "direction": 0, "need": (12 + (mini(10, 2 * (day() - 16)) if available("it2") else 0)) / (2 if has_perk("mouse") else 1)}
 		"virus": events.virus = ceili((5 + (mini(5, day() - 16) if available("it2") else 0)) / (2.0 if has_perk("antivirus") else 1.0))
-	notice.emit({"boss": "O chefe está chegando! Abra a planilha.", "shuffle": "As bandejas vão trocar de lugar!", "freeze": "Computador travado: mova o mouse de um lado para o outro.", "virus": "Feche os avisos de vírus pelo X."}[id])
+	notice.emit({"boss": "O chefe entrou! Corra até a cadeira e sente.", "shuffle": "As bandejas vão trocar de lugar!", "freeze": "Computador travado: mova o mouse de um lado para o outro.", "virus": "Feche os avisos de vírus pelo X."}[id])
 	return true
 
 func dodge_boss() -> void:
@@ -515,7 +530,7 @@ func dodge_boss() -> void:
 	events.erase("boss")
 	success(20)
 	stat("bosses")
-	notice.emit("Planilha aberta. O chefe passou.")
+	notice.emit("Você estava na cadeira. O chefe passou.")
 
 func shake_mouse(relative: float) -> void:
 	if not active() or not events.has("freeze") or absf(relative) < 6: return
@@ -546,6 +561,28 @@ func use_coffee(free := false) -> void:
 		career.inv.cafe -= 1
 		add_stress(-25)
 	stat("cafe")
+
+## Café trazido da máquina e deixado na mesa: alivia o estresse e deixa o tempo mais lento por 5 s.
+func drink_coffee() -> void:
+	if not active(): return
+	add_stress(-25)
+	slow_time = 5.0
+	stat("cafe")
+
+## Atalho de depuração: gera uma tarefa/evento ignorando o dia de estreia e o teto de pendências.
+func debug_spawn(kind: String) -> bool:
+	if career.get("phase", "") != "day": return false
+	debug_unlock = true
+	var done := false
+	if kind in ["call", "printer"]:
+		var real_day: int = int(career.day)
+		career.day = maxi(real_day, 25)
+		var before := tasks.size()
+		done = spawn_task(kind) and tasks.size() > before
+		career.day = real_day
+	elif kind == "boss": done = spawn_event("boss")
+	debug_unlock = false
+	return done
 
 func _debut() -> void:
 	if career.time < 20: return

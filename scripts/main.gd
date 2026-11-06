@@ -31,6 +31,7 @@ const CRT_SHADER := preload("res://assets/shaders/crt_monitor.gdshader")
 @onready var desktop_viewport: SubViewport = $DesktopSubViewport
 @onready var desktop: Control = $DesktopSubViewport/WorkOSDesktop
 var desktop_buttons := 0
+var office_tasks: Node3D
 var video_layers: Array[CanvasLayer] = []
 var pause_menu: CanvasLayer
 var effects_suppressed := false
@@ -74,6 +75,12 @@ func _ready() -> void:
 	_build_desktop()
 	player.configure(self)
 	travel.configure(self, player)
+	office_tasks = preload("res://scripts/world/office_tasks.gd").new()
+	add_child(office_tasks)
+	office_tasks.configure(self)
+	var office_lighting := preload("res://scripts/world/office_lighting.gd").new()
+	add_child(office_lighting)
+	office_lighting.configure(self, office_tasks)
 	pause_menu = preload("res://scripts/ui/pause_menu.gd").new()
 	pause_menu.name = "PauseMenu"
 	add_child(pause_menu)
@@ -373,6 +380,12 @@ func _unhandled_input(event: InputEvent) -> void:
 		travel._message(desktop.game.debug_advance(60.0 if event.keycode == KEY_F6 else 24 * 60.0))
 		get_viewport().set_input_as_handled()
 		return
+	# Atalhos de depuração das tarefas físicas: F1 telefone, F2 impressora, F3 lixo, F4 chefe.
+	if OS.is_debug_build() and event is InputEventKey and event.pressed and not event.echo and event.keycode in [KEY_F1, KEY_F2, KEY_F3, KEY_F4]:
+		var kinds := {KEY_F1: "call", KEY_F2: "printer", KEY_F3: "litter", KEY_F4: "boss"}
+		travel._message(office_tasks.debug_spawn(kinds[event.keycode]))
+		get_viewport().set_input_as_handled()
+		return
 	if is_zoomed:
 		if event is InputEventKey:
 			desktop_viewport.push_input(event.duplicate(), true)
@@ -382,6 +395,9 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 		return
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_E:
+		if office_tasks.try_interact():
+			get_viewport().set_input_as_handled()
+			return
 		if not travel.try_interact():
 			player.interact()
 		get_viewport().set_input_as_handled()
