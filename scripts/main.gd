@@ -326,7 +326,7 @@ func _build_desktop() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if Engine.is_editor_hint() or is_transitioning or (travel != null and travel.changing):
+	if Engine.is_editor_hint() or is_transitioning or (travel != null and (travel.changing or travel.ui_open)):
 		return
 	if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
 		if is_zoomed:

@@ -19,6 +19,8 @@ var feedback: Label
 var feedback_until := 0
 var office_visible_nodes: Array[Node3D] = []
 var office_collision_layers: Dictionary = {}
+var market_panel: CanvasLayer
+var ui_open := false
 
 func configure(main_scene: Node3D, actor: CharacterBody3D) -> void:
 	host = main_scene
@@ -37,6 +39,11 @@ func configure(main_scene: Node3D, actor: CharacterBody3D) -> void:
 	for body in host.get_node("WorldCollisions").find_children("*", "CollisionObject3D", true, false):
 		office_collision_layers[body] = body.collision_layer
 	_build_overlay()
+	market_panel = preload("res://scripts/world/market_panel.gd").new()
+	market_panel.name = "MarketPanel"
+	host.add_child(market_panel)
+	market_panel.setup(_game())
+	market_panel.closed.connect(_close_ui)
 
 func _game() -> Node:
 	return host.desktop.game
@@ -76,6 +83,9 @@ func _message(text: String) -> void:
 	feedback.show()
 
 func _office_zone(name: String, position: Vector3, action: StringName, text: String, door: NodePath = NodePath()) -> void:
+	_zone(office_zones, name, position, action, text, door)
+
+func _zone(parent: Node, name: String, position: Vector3, action: StringName, text: String, door: NodePath = NodePath(), radius := 1.25) -> void:
 	var zone := Area3D.new()
 	zone.name = name
 	zone.set_script(preload("res://scripts/world/interaction_zone.gd"))
@@ -85,9 +95,9 @@ func _office_zone(name: String, position: Vector3, action: StringName, text: Str
 	zone.position = position
 	zone.collision_layer = 0
 	zone.collision_mask = 2
-	office_zones.add_child(zone)
+	parent.add_child(zone)
 	var sphere := SphereShape3D.new()
-	sphere.radius = 1.25
+	sphere.radius = radius
 	var shape := CollisionShape3D.new()
 	shape.shape = sphere
 	zone.add_child(shape)
@@ -193,6 +203,14 @@ func try_interact() -> bool:
 			_start_travel(zone, "home", "FromBus")
 		"home_exit":
 			_start_travel(zone, "street", "FromHome")
+		"home_sleep":
+			var refusal: String = _game().can_sleep()
+			if refusal.is_empty(): _sleep()
+			else: _message(refusal)
+		"market_shelf":
+			_open_ui("shelf")
+		"market_checkout":
+			_open_ui("checkout")
 		_:
 			return false
 	return true
@@ -240,17 +258,69 @@ func _do_travel(zone: Area3D, destination: String, spawn_name: String) -> void:
 		else:
 			current_scene = packed.instantiate() as Node3D
 			exterior.add_child(current_scene)
+			_add_location_zones(destination)
 			var spawn := current_scene.get_node_or_null("Spawns/" + spawn_name) as Marker3D
 			if spawn == null:
 				push_error("Spawn ausente em " + destination + ": " + spawn_name)
 			else:
 				player.teleport_from_travel(spawn.global_position, spawn.global_rotation.y)
+	if destination != "market": market_panel.clear_cart()
 	location = destination
 	await get_tree().physics_frame
 	await _fade(0.0, 0.32)
 	player.set_physics_process(true)
 	changing = false
 	_message({"office":"Escritório", "street":"Rua comercial", "market":"Mercado", "home":"Casa"}[location])
+
+## Zonas de jogo nos cenários provisórios (criadas aqui para não depender da edição dos blockouts).
+func _add_location_zones(destination: String) -> void:
+	match destination:
+		"home":
+			_zone(current_scene, "Dormir", Vector3(-2.5, 1.0, -2.0), &"home_sleep", "Dormir", NodePath(), 1.6)
+		"market":
+			_zone(current_scene, "PrateleiraA", Vector3(-1.6, 1.0, -1.3), &"market_shelf", "Ver prateleiras", NodePath(), 1.5)
+			_zone(current_scene, "PrateleiraB", Vector3(1.3, 1.0, -1.3), &"market_shelf", "Ver prateleiras", NodePath(), 1.5)
+			_zone(current_scene, "Caixa", Vector3(-2.4, 1.0, 3.1), &"market_checkout", "Pagar no caixa", NodePath(), 1.4)
+
+func _open_ui(view: String) -> void:
+	ui_open = true
+	player.set_physics_process(false)
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	market_panel.open(view)
+
+func _close_ui() -> void:
+	ui_open = false
+	player.set_physics_process(true)
+	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+
+## Porte de src/js/15-dormir-e-acordar.js: escurece, mostra o despertador às 06:00 e acorda no dia seguinte.
+func _sleep() -> void:
+	changing = true
+	player.set_physics_process(false)
+	overlay.color = Color("#2b2340")
+	await _fade(1.0, 0.52)
+	feedback.text = "z  Z  z  Z  z"
+	feedback_until = Time.get_ticks_msec() + 3000
+	feedback.show()
+	await get_tree().create_timer(3.0).timeout
+	var alarm := Button.new()
+	alarm.text = "⏰  06:00
+" + str(_game().texts().ui.get("wakeHint", "Clique no despertador para acordar"))
+	alarm.add_theme_font_size_override("font_size", 32)
+	alarm.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+	overlay.get_parent().add_child(alarm)
+	alarm.position -= alarm.get_combined_minimum_size() / 2
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	await alarm.pressed
+	alarm.queue_free()
+	_game().sleep()
+	overlay.color = Color.WHITE
+	await _fade(0.0, 0.75)
+	overlay.color = Color.BLACK
+	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	player.set_physics_process(true)
+	changing = false
+	_message("Bom dia! Dia %d · %s. Vá ao escritório bater o ponto." % [_game().clock.today(), _game().clock.date_text()])
 
 func _fade(target: float, seconds: float) -> void:
 	var tween := create_tween()

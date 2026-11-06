@@ -87,6 +87,7 @@ func minute() -> float:
 		var left: float = game.DAY_SECONDS - t0
 		var end := WORK_OUT - (BRK_LEN if pending() else 0.0)
 		return minf(WORK_OUT, m0 + (maxf(0, float(game.career.time) - t0) * (end - m0) / left if left > 0 else 0.0))
+	if phase == "ended" and int(game.career.get("slept", 0)) == today(): return arrival()   # já dormiu: manhã do dia seguinte
 	if phase in ["ended", "promotion", "won", "burnout"]: return WORK_OUT if not c.is_empty() else arrival()
 	return arrival()
 

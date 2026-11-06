@@ -147,10 +147,68 @@ func punch() -> String:
 		save_game()
 		changed.emit()
 		return "Saída registrada às %s. Você pode ir embora." % clock.text()
+	if career.phase == "ended" and int(career.get("slept", 0)) != clock.today():
+		return "Você ainda não descansou. Vá para casa dormir antes do próximo expediente."
 	career.ponto = {"day": clock.today(), "in": true}
 	save_game()
 	changed.emit()
 	return "Entrada registrada · dia %d · %s · %s." % [clock.today(), clock.date_text(), clock.text(clock.arrival())]
+
+## Casa: dormir só depois do expediente e com a saída registrada; acordar já é a manhã do dia seguinte.
+func can_sleep() -> String:
+	if career.is_empty() or career.phase != "ended": return "Ainda não é hora de dormir: o expediente de hoje não terminou."
+	if int(career.get("slept", 0)) == clock.today(): return "Você já descansou. Hora de ir para o escritório."
+	return ""
+
+func sleep() -> void:
+	if not can_sleep().is_empty(): return
+	career.slept = clock.today()
+	save_game()
+	changed.emit()
+
+## Mercado (porte de src/js/16-mercado.js e 17-caixa.js): consumo vai para o inventário, itens "do dia" valem
+## para o próximo expediente e enfeites ficam no perfil.
+func shop_item(id: String) -> Dictionary:
+	for item in data.shop:
+		if item.id == id: return item
+	return {}
+
+func shop_name(id: String) -> Array:
+	return texts().get("shop", {}).get(id, [id, ""])
+
+func can_add(id: String, cart: Array) -> bool:
+	var item := shop_item(id)
+	if item.is_empty(): return false
+	if item.kind == "decor": return not id in profile.decor and not id in cart
+	if item.kind == "day": return not id in career.get("today", []) and not id in cart
+	return true
+
+func cart_total(cart: Array) -> int:
+	var total := 0
+	for id in cart: total += int(shop_item(id).get("price", 0))
+	return total
+
+func buy(cart: Array) -> String:
+	if cart.is_empty(): return "A cesta está vazia."
+	if career.is_empty(): return "Sem carreira ativa no Portal RH."
+	var total := cart_total(cart)
+	if total > int(profile.wallet): return str(texts().ui.get("overBudget", "Saldo insuficiente."))
+	profile.wallet -= total
+	var decor := false
+	for id in cart:
+		var item := shop_item(id)
+		match str(item.kind):
+			"use": career.inv[id] = int(career.inv.get(id, 0)) + 1
+			"day": career.today.append(id)
+			"decor":
+				if not id in profile.decor:
+					profile.decor.append(id)
+					decor = true
+	stat("buy", cart.size())   # missão do amigo secreto (só conta dentro do período do evento)
+	if decor: decor_changed.emit(profile.decor)
+	save_game()
+	changed.emit()
+	return "%s · R$ %d" % [texts().ui.get("approved", "APROVADO"), total]
 
 ## Intervalo (Analista em diante, uma vez por dia): congela o expediente por 45 s reais = 1 h simulada.
 func break_available() -> bool:
