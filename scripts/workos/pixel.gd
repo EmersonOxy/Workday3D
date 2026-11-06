@@ -82,6 +82,7 @@ static func app_icon(app: String, scale := 3) -> Texture2D:
 		"profile": return menu_icon("prof", scale)
 		"backup": return sprite("box", scale)
 		"config": return menu_icon("cfg", scale)
+		"arcade": return menu_icon("arc", scale)
 		"about": return menu_icon("how", scale)
 	return menu_icon("app", scale)
 

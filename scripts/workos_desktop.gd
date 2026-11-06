@@ -15,6 +15,7 @@ const WINDOW_SCRIPT := preload("res://scripts/workos/os_window.gd")
 const APPS := preload("res://scripts/workos/apps.gd")
 const MSN_APP := preload("res://scripts/workos/msn_app.gd")
 const OS_APPS := preload("res://scripts/workos/os_apps.gd")
+const ARCADE_APP := preload("res://scripts/workos/arcade_app.gd")
 const PIXEL := preload("res://scripts/workos/pixel.gd")
 const STYLE := preload("res://scripts/workos/os_style.gd")
 const SAVE_PATH := "user://workos.cfg"
@@ -36,12 +37,13 @@ const APP_INFO := {
 	"backup": ["BACKUP.EXE", "Backup"],
 	"config": ["CONFIGURACOES.EXE", "Configurações"],
 	"shop": ["CATALOGO.EXE", "Catálogo"],
+	"arcade": ["ARCADE.EXE", "Arcade"],
 	"about": ["SOBRE.TXT", "Sobre o WorkOS"],
 }
-const DESKTOP_ICONS := ["workday", "calendar", "calc", "notes", "music", "settings", "profile", "archive", "shop", "messenger"]
+const DESKTOP_ICONS := ["workday", "calendar", "calc", "notes", "music", "settings", "profile", "archive", "shop", "arcade", "messenger"]
 const WINDOW_SIZES := {"workday": Vector2(1080, 620), "calendar": Vector2(1040, 620), "archive": Vector2(900, 600), "messenger": Vector2(900, 600),
 	"music": Vector2(640, 540), "calc": Vector2(380, 520), "notes": Vector2(620, 480), "settings": Vector2(620, 560), "profile": Vector2(820, 600),
-	"backup": Vector2(620, 460), "about": Vector2(560, 420), "config": Vector2(720, 560), "shop": Vector2(880, 600)}
+	"backup": Vector2(620, 460), "about": Vector2(560, 420), "config": Vector2(720, 560), "shop": Vector2(880, 600), "arcade": Vector2(620, 620)}
 
 var music: Node
 var game: Node
@@ -370,7 +372,7 @@ func _build_start_menu() -> void:
 	column.add_child(body)
 	var programs := _menu_column(STYLE.PAPER, 250)
 	body.add_child(programs.get_parent())
-	for id in ["workday", "messenger", "calendar", "archive", "shop", "notes", "calc", "music"]:
+	for id in ["workday", "messenger", "calendar", "archive", "shop", "arcade", "notes", "calc", "music"]:
 		_menu_item(programs, APP_INFO[id][1] if id != "workday" else "Portal RH", PIXEL.app_icon(id, 2), open_app.bind(id))
 	var places := _menu_column(Color("dfe6f3"), 210)
 	body.add_child(places.get_parent())
@@ -648,12 +650,16 @@ func open_app(id: String) -> void:
 		# O MSworkN ocupa a janela inteira, sem a margem do papel (.os-win.msn-win .mw-in { padding: 0 }).
 		app = MSN_APP.new()
 		window.paper.add_theme_stylebox_override("panel", STYLE.flat(STYLE.PAPER, Color.TRANSPARENT, 0, 0))
+	elif id == "arcade":
+		app = ARCADE_APP.new()
 	elif id in ["calendar", "profile", "archive", "config", "shop"]:
 		app = VBoxContainer.new()
 		app.add_theme_constant_override("separation", 10)
 	else:
 		app = load("res://scenes/workos/apps/%s.tscn" % id).instantiate()
 	app.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	# O título interno das cenas antigas repetia a barra de título da janela.
+	if app.has_node("Heading"): app.get_node("Heading").hide()
 	window.content.add_child(app)
 	match id:
 		"workday": app.setup(game, self)
@@ -661,6 +667,7 @@ func open_app(id: String) -> void:
 		"archive": OS_APPS.archive(app, game)
 		"config": OS_APPS.settings(app, self)
 		"shop": OS_APPS.catalog(app, game)
+		"arcade": app.setup(game, fx)
 		"messenger": app.setup(social)
 		"profile": OS_APPS.profile(app, game, func() -> void: toast("WorkOS", "Crachá atualizado."))
 		"backup": APPS.backup(app, game)
@@ -742,6 +749,11 @@ func _exit_tree() -> void:
 
 func _build_calculator(parent: Control) -> void:
 	var display: LineEdit = parent.get_node("Display")
+	# Visor da calculadora (.calc-d): números grandes à direita num painel afundado.
+	display.custom_minimum_size.y = 64
+	display.add_theme_font_size_override("font_size", 40)
+	display.add_theme_stylebox_override("normal", STYLE.bevel(Color("dfe9d8"), Color("9aa89a"), STYLE.PAPER, false, STYLE.INK, 2, 2, Vector4(12, 4, 12, 4)))
+	display.add_theme_stylebox_override("focus", STYLE.bevel(Color("dfe9d8"), Color("9aa89a"), STYLE.PAPER, false, STYLE.BLUE, 2, 2, Vector4(12, 4, 12, 4)))
 	display.text_submitted.connect(func(_text: String) -> void: _calculate(display))
 	for button in parent.get_node("Keys").get_children():
 		button.pressed.connect(_calculator_key.bind(button.text, display))
@@ -787,8 +799,11 @@ func _build_settings(parent: Control) -> void:
 	for node in [effect_label, effects, crt]: parent.move_child(node, parent.get_node("Preview").get_index())
 	var preview: TextureRect = parent.get_node("Preview")
 	preview.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	preview.texture = wallpaper.texture
-	options.item_selected.connect(func(_index: int) -> void: preview.texture = wallpaper.texture)
+	var sync_preview := func() -> void:
+		preview.texture = wallpaper.texture
+		preview.stretch_mode = TextureRect.STRETCH_TILE if wallpaper.stretch_mode == TextureRect.STRETCH_TILE else TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	sync_preview.call()
+	options.item_selected.connect(func(_index: int) -> void: sync_preview.call())
 
 func video_world() -> String:
 	return str(settings.get_value("video", "world", "psx"))

@@ -228,6 +228,7 @@ func _contact_row(id: String, request: bool) -> Control:
 	if unread > 0 or request:
 		var badge := label(" + " if request else " %d " % unread, 16, STYLE.PAPER)
 		badge.clip_text = false
+		badge.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
 		badge.add_theme_stylebox_override("normal", STYLE.flat(Color("ef4b3f"), STYLE.INK, 2, 1))
 		badge.size_flags_vertical = SIZE_SHRINK_CENTER
 		line.add_child(badge)
@@ -347,6 +348,7 @@ func _bubble(who: String, text: String, continued: bool) -> Control:
 	if not continued:
 		var name := label("Você" if mine else str(game.data.cast[who].name), 17, Color("c25f3b") if mine else STYLE.BLUE)
 		name.clip_text = false
+		name.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
 		name.size_flags_horizontal = SIZE_SHRINK_END if mine else SIZE_SHRINK_BEGIN
 		column.add_child(name)
 	var box := PanelContainer.new()

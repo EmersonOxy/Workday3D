@@ -99,6 +99,17 @@ static func flat(fill: Color, border := Color.TRANSPARENT, width := 0, padding :
 	box.anti_aliasing = false
 	return box
 
+## Quadradinho de marcação em pixel art 16x16: contorno de tinta, fundo papel e "v" verde quando marcado.
+static func _check_icon(checked: bool) -> Texture2D:
+	var image := Image.create(16, 16, false, Image.FORMAT_RGBA8)
+	image.fill(INK)
+	image.fill_rect(Rect2i(2, 2, 12, 12), PAPER)
+	image.fill_rect(Rect2i(2, 2, 12, 2), Color("dcc6a0"))
+	if checked:
+		for point in [Vector2i(4, 8), Vector2i(5, 9), Vector2i(6, 10), Vector2i(7, 9), Vector2i(8, 8), Vector2i(9, 7), Vector2i(10, 6), Vector2i(11, 5)]:
+			image.fill_rect(Rect2i(point.x, point.y, 2, 2), Color("2f8a45"))
+	return ImageTexture.create_from_image(image)
+
 static func tinted(box: StyleBoxTexture, color: Color) -> StyleBoxTexture:
 	var copy := box.duplicate() as StyleBoxTexture
 	copy.modulate_color = color
@@ -129,6 +140,18 @@ static func theme() -> Theme:
 			t.set_color(key, type, INK)
 		t.set_color("font_disabled_color", type, Color(INK, 0.45))
 		t.set_constant("h_separation", type, 8)
+	# Caixas de seleção: sem fundo pesado; o quadradinho marcado já indica o estado.
+	for type in ["CheckBox", "CheckButton"]:
+		var plain := flat(Color.TRANSPARENT, Color.TRANSPARENT, 0, 4)
+		t.set_stylebox("normal", type, plain)
+		t.set_stylebox("pressed", type, plain)
+		t.set_stylebox("hover", type, flat(Color(BLUE_HI, 0.18), Color.TRANSPARENT, 0, 4))
+		t.set_stylebox("hover_pressed", type, flat(Color(BLUE_HI, 0.18), Color.TRANSPARENT, 0, 4))
+		t.set_stylebox("focus", type, StyleBoxEmpty.new())
+		for key in ["font_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color", "font_focus_color"]:
+			t.set_color(key, type, INK)
+		t.set_icon("checked", type, _check_icon(true))
+		t.set_icon("unchecked", type, _check_icon(false))
 	# Campos de texto.
 	var field := sliced("input.png", Vector4(7, 7, 7, 7), Vector4(10, 6, 10, 6))
 	for type in ["LineEdit", "TextEdit", "SpinBox"]:
