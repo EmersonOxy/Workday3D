@@ -335,6 +335,11 @@ func _unhandled_input(event: InputEvent) -> void:
 			Input.mouse_mode = Input.MOUSE_MODE_VISIBLE if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED else Input.MOUSE_MODE_CAPTURED
 		get_viewport().set_input_as_handled()
 		return
+	# Atalhos de debug (só em builds de debug): F6 avança 1 hora, F7 pula para as 18:00.
+	if OS.is_debug_build() and event is InputEventKey and event.pressed and not event.echo and event.keycode in [KEY_F6, KEY_F7]:
+		travel._message(desktop.game.debug_advance(60.0 if event.keycode == KEY_F6 else 24 * 60.0))
+		get_viewport().set_input_as_handled()
+		return
 	if is_zoomed:
 		if event is InputEventKey:
 			desktop_viewport.push_input(event.duplicate(), true)

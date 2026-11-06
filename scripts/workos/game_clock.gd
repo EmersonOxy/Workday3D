@@ -90,6 +90,14 @@ func minute() -> float:
 	if phase in ["ended", "promotion", "won", "burnout"]: return WORK_OUT if not c.is_empty() else arrival()
 	return arrival()
 
+## Segundos de expediente equivalentes a `minutes` simulados no ritmo atual (usado pelo atalho de debug).
+func work_seconds(minutes: float) -> float:
+	var c := _clk()
+	var left: float = game.DAY_SECONDS - float(c.get("t0", 0.0))
+	var end := WORK_OUT - (BRK_LEN if pending() else 0.0)
+	var span := end - float(c.get("m0", WORK_IN))
+	return minutes * left / span if span > 0 else left
+
 func text(m := -1.0) -> String:
 	if m < 0: m = minute()
 	var whole := floori(m)

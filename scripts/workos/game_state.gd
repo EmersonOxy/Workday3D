@@ -156,6 +156,17 @@ func punch() -> String:
 func break_available() -> bool:
 	return career.get("phase", "") == "day" and clock.break_unlocked() and int(career.get("break_day", 0)) != day() 		and not career.get("on_break", false) and not events.has("boss") and not events.has("virus") and not events.has("freeze") and clock.break_window()
 
+## Debug: avança o expediente `minutes` simulados (ou até 18:00) sem esperar.
+func debug_advance(minutes: float) -> String:
+	if career.get("phase", "") != "day": return "Debug: nenhum expediente em andamento."
+	end_break()
+	career.time = minf(DAY_SECONDS, float(career.time) + clock.work_seconds(minutes))
+	if career.time >= DAY_SECONDS:
+		finish_day()
+		return "Debug: expediente encerrado às 18:00."
+	changed.emit()
+	return "Debug: agora são %s." % clock.text()
+
 func start_break() -> bool:
 	if not break_available(): return false
 	clock.break_start()
