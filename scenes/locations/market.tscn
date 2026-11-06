@@ -1,5 +1,9 @@
 [gd_scene format=3]
 
+[ext_resource type="PackedScene" path="res://assets/models/biblioteca/cash-counter-checkout/source/Counter.fbx" id="m_counter"]
+[ext_resource type="PackedScene" path="res://assets/models/biblioteca/hundred-dolar/source/Hundred_Dolar.glb" id="m_note"]
+[ext_resource type="PackedScene" path="res://assets/models/biblioteca/komi-san-vending-machine/source/Komi.fbx" id="m_vending"]
+[ext_resource type="PackedScene" path="res://assets/models/biblioteca/plastic-basket/source/Basket.fbx" id="m_basket"]
 [ext_resource type="Script" path="res://scripts/world/interaction_zone.gd" id="1_zone"]
 
 [sub_resource type="BoxMesh" id="MESH0"]
@@ -261,6 +265,7 @@ position = Vector3(-3.5, 0.55, 3.1)
 collision_layer = 1
 
 [node name="Visual" type="MeshInstance3D" parent="BalcaoCaixa"]
+visible = false
 mesh = SubResource("MESH34")
 material_override = SubResource("MAT36")
 
@@ -271,6 +276,7 @@ shape = SubResource("SHAPE35")
 position = Vector3(-3.5, 1.25, 3.1)
 
 [node name="Visual" type="MeshInstance3D" parent="BalancaCaixa"]
+visible = false
 mesh = SubResource("MESH37")
 material_override = SubResource("MAT39")
 
@@ -326,3 +332,18 @@ shape = SubResource("TRIGGER47")
 [node name="FromStreet" type="Marker3D" parent="Spawns"]
 position = Vector3(0, 0, 3.8)
 rotation_degrees = Vector3(0, 0, 0)
+
+[node name="CaixaModelo" parent="." instance=ExtResource("m_counter")]
+transform = Transform3D(0.7, 0, -0, 0, 0.7, 0, 0, -0, 0.7, -3.5, 0.39, 3.1)
+
+[node name="Nota100" parent="." instance=ExtResource("m_note")]
+transform = Transform3D(0.921061, 0, -0.389418, 0, 1, 0, 0.389418, -0, 0.921061, -3.05, 0.876, 3)
+
+[node name="MaquinaBebidas" parent="." instance=ExtResource("m_vending")]
+transform = Transform3D(6.12323e-17, 0, 1, -0, 1, 0, -1, -0, 6.12323e-17, 5.38, -0.038, 4.5)
+
+[node name="Cesto1" parent="." instance=ExtResource("m_basket")]
+transform = Transform3D(0.3, 0, -0, 0, 0.3, 0, 0, -0, 0.3, -1.6, 0, 5.6)
+
+[node name="Cesto2" parent="." instance=ExtResource("m_basket")]
+transform = Transform3D(0.3, 0, -0, 0, 0.3, 0, 0, -0, 0.3, -1.6, 0.16, 5.6)

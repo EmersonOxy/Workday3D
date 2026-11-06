@@ -1,6 +1,11 @@
 [gd_scene format=3]
 
+[ext_resource type="PackedScene" path="res://assets/models/biblioteca/bed/source/Bed.fbx" id="m_bed"]
+[ext_resource type="PackedScene" path="res://assets/models/biblioteca/alarm-clock/alarm_clock.glb" id="m_alarm"]
 [ext_resource type="Script" path="res://scripts/world/interaction_zone.gd" id="1_zone"]
+
+[sub_resource type="BoxMesh" id="MESH_CRIADO"]
+size = Vector3(0.5, 0.5, 0.45)
 
 [sub_resource type="BoxMesh" id="MESH0"]
 size = Vector3(10, 0.24, 12)
@@ -165,6 +170,7 @@ position = Vector3(-2.5, 0.4, -2)
 collision_layer = 1
 
 [node name="Visual" type="MeshInstance3D" parent="Cama"]
+visible = false
 mesh = SubResource("MESH11")
 material_override = SubResource("MAT13")
 
@@ -175,6 +181,7 @@ shape = SubResource("SHAPE12")
 position = Vector3(-2.5, 0.85, -3.1)
 
 [node name="Visual" type="MeshInstance3D" parent="Travesseiro"]
+visible = false
 mesh = SubResource("MESH14")
 material_override = SubResource("MAT16")
 
@@ -263,3 +270,13 @@ shape = SubResource("TRIGGER33")
 [node name="FromBus" type="Marker3D" parent="Spawns"]
 position = Vector3(0, 0, 3)
 rotation_degrees = Vector3(0, 0, 0)
+
+[node name="CamaModelo" parent="." instance=ExtResource("m_bed")]
+transform = Transform3D(6.12323e-17, 0, -1, 0, 1, 0, 1, -0, 6.12323e-17, -2.365, 0.11, -2.31)
+
+[node name="CriadoMudo" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.8, 0.25, -3.3)
+mesh = SubResource("MESH_CRIADO")
+
+[node name="Despertador" parent="." instance=ExtResource("m_alarm")]
+transform = Transform3D(-0.07, 0, -8.57253e-18, 0, 0.07, -0, 8.57253e-18, -0, -0.07, -0.8, 0.5, -3.3)

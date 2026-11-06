@@ -1,5 +1,6 @@
 [gd_scene format=3 uid="uid://bv7dnyh0bxqg7"]
 
+[ext_resource type="PackedScene" path="res://assets/models/biblioteca/wall-clock/clock.glb" id="m_wallclock"]
 [ext_resource type="Script" uid="uid://50npccyfxvrt" path="res://scripts/main.gd" id="1_main"]
 [ext_resource type="PackedScene" uid="uid://cx6ukce427hiy" path="res://assets/models/office_chair.glb" id="2_chair"]
 [ext_resource type="PackedScene" uid="uid://blnp50a8rqure" path="res://assets/models/office_table.glb" id="3_table"]
@@ -585,3 +586,6 @@ gizmo_extents = 0.08
 
 [node name="WorldTravel" type="Node" parent="." unique_id=1746113216]
 script = ExtResource("world_travel")
+
+[node name="WallClock" parent="." instance=ExtResource("m_wallclock")]
+transform = Transform3D(0.06, 0, -0, 0, 3.67394e-18, 0.06, 0, -0.06, 3.67394e-18, -3, 2.35, -5.85)

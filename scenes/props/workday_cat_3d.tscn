@@ -4,9 +4,8 @@
 
 [node name="WorkdayCat3D" type="Sprite3D"]
 billboard = 2
-no_depth_test = true
 pixel_size = 0.0025
 offset = Vector2(0, 60)
 texture_filter = 0
-render_priority = 127
+alpha_cut = 1
 script = ExtResource("1_cat")
