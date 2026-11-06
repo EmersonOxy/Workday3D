@@ -20,6 +20,13 @@ var feedback_until := 0
 var office_visible_nodes: Array[Node3D] = []
 var office_collision_layers: Dictionary = {}
 var market_panel: CanvasLayer
+var shine_material: ShaderMaterial
+const IDLE_PROGRESS := -0.2
+var cover_progress := 1.6
+var idle_progress := IDLE_PROGRESS
+var day_cycle: Node
+## Nós com brilho de "item utilizável" em cada cenário (caminhos relativos à cena do lugar).
+const SHINE_TARGETS := {"home": ["CamaModelo", "Despertador"], "market": ["PrateleiraEsquerda", "PrateleiraDireita", "CaixaModelo"]}
 var ui_open := false
 
 func configure(main_scene: Node3D, actor: CharacterBody3D) -> void:
@@ -32,18 +39,26 @@ func configure(main_scene: Node3D, actor: CharacterBody3D) -> void:
 	office_zones.name = "OfficeInteractionZones"
 	host.add_child(office_zones)
 	_create_office_interactions()
-	for name in ["Room", "OfficeTable", "OfficeChair", "Monitor", "KeyLight", "DirectionalLight3D", "Office2DProps", "DeskCat", "WallClock"]:
+	for name in ["Room", "OfficeTable", "OfficeChair", "Monitor", "KeyLight", "DirectionalLight3D", "Office2DProps", "DeskCat", "WallClock", "OfficeLayout"]:
 		var node := host.get_node_or_null(name) as Node3D
 		if node != null:
 			office_visible_nodes.append(node)
 	for body in host.get_node("WorldCollisions").find_children("*", "CollisionObject3D", true, false):
 		office_collision_layers[body] = body.collision_layer
+	shine_material = ShaderMaterial.new()
+	shine_material.shader = preload("res://assets/shaders/shine_highlight.gdshader")
+	shine_material.set_shader_parameter("shine_color", Color(1.0, 0.95, 0.75, 0.55))
 	_build_overlay()
+	for target in ["PontoVisual", "VisorPonto", "OfficeDoor"]: _shine(office_zones.get_node_or_null(target))
 	market_panel = preload("res://scripts/world/market_panel.gd").new()
 	market_panel.name = "MarketPanel"
 	host.add_child(market_panel)
 	market_panel.setup(_game())
 	market_panel.closed.connect(_close_ui)
+	day_cycle = preload("res://scripts/world/day_cycle.gd").new()
+	day_cycle.name = "DayCycle"
+	add_child(day_cycle)
+	day_cycle.setup(host.get_node("WorldEnvironment"), _game())
 
 func _game() -> Node:
 	return host.desktop.game
@@ -61,7 +76,14 @@ func _build_overlay() -> void:
 	overlay.color = Color.BLACK
 	overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	overlay.modulate.a = 0.0
+	# Transições sorteadas a cada fechamento de tela (assets/shaders/transition.gdshader); ver _randomize_transition.
+	var transition := ShaderMaterial.new()
+	transition.shader = preload("res://assets/shaders/transition.gdshader")
+	transition.set_shader_parameter("position", Vector2(0.5, 0.5))
+	# Começa abaixo de zero: em 0 a borda suave das formas ainda escurece um ponto no centro da tela.
+	transition.set_shader_parameter("progress", IDLE_PROGRESS)
+	overlay.material = transition
+	_randomize_transition()
 	layer.add_child(overlay)
 	# Anchors are applied again with a parent layout available.
 	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -259,12 +281,14 @@ func _do_travel(zone: Area3D, destination: String, spawn_name: String) -> void:
 			current_scene = packed.instantiate() as Node3D
 			exterior.add_child(current_scene)
 			_add_location_zones(destination)
+			for target in SHINE_TARGETS.get(destination, []): _shine(current_scene.get_node_or_null(target))
 			var spawn := current_scene.get_node_or_null("Spawns/" + spawn_name) as Marker3D
 			if spawn == null:
 				push_error("Spawn ausente em " + destination + ": " + spawn_name)
 			else:
 				player.teleport_from_travel(spawn.global_position, spawn.global_rotation.y)
 	if destination != "market": market_panel.clear_cart()
+	day_cycle.apply(destination, current_scene)
 	location = destination
 	await get_tree().physics_frame
 	await _fade(0.0, 0.32)
@@ -322,7 +346,57 @@ func _sleep() -> void:
 	changing = false
 	_message("Bom dia! Dia %d · %s. Vá ao escritório bater o ponto." % [_game().clock.today(), _game().clock.date_text()])
 
+## Brilho de item utilizável (assets/shaders/shine_highlight.gdshader) por cima de todas as malhas do nó.
+func _shine(node: Node) -> void:
+	if node == null: return
+	var meshes: Array = node.find_children("*", "MeshInstance3D", true, false)
+	if node is MeshInstance3D: meshes.append(node)
+	for mesh in meshes: mesh.material_overlay = shine_material
+
+## Fechar a tela sorteia um estilo novo; abrir desfaz o mesmo estilo.
 func _fade(target: float, seconds: float) -> void:
+	if target > 0.0: _randomize_transition()
 	var tween := create_tween()
-	tween.tween_property(overlay, "modulate:a", target, seconds).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tween.tween_property(overlay, "material:shader_parameter/progress", cover_progress if target > 0.0 else idle_progress, seconds * 1.6).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	await tween.finished
+
+## Estilos: forma (triângulo a octógono, círculo), cortina reta, relógio com setores e mosaico de peças com onda.
+## invert: nas formas e cortinas a cobertura cresce de dentro para fora; no relógio o próprio valor já é a cobertura.
+func _randomize_transition() -> void:
+	var material := overlay.material as ShaderMaterial
+	var style := randi() % 5
+	var grid := Vector2.ONE
+	var bias := Vector2.ZERO
+	cover_progress = 1.6
+	idle_progress = IDLE_PROGRESS
+	match style:
+		0:
+			material.set_shader_parameter("transition_type", 2)
+			material.set_shader_parameter("edges", [3, 4, 5, 6, 8, 64].pick_random())
+			material.set_shader_parameter("shape_feather", 0.15)
+		1:
+			material.set_shader_parameter("transition_type", 0)
+			material.set_shader_parameter("basic_feather", 0.1)
+		2:
+			material.set_shader_parameter("transition_type", 3)
+			material.set_shader_parameter("sectors", randi_range(1, 4))
+			material.set_shader_parameter("clock_feather", 0.3)
+			cover_progress = 1.4
+		_:
+			# Mosaico: a tela se divide em peças que fecham em onda (diagonal, horizontal ou vertical).
+			material.set_shader_parameter("transition_type", [0, 2].pick_random())
+			material.set_shader_parameter("edges", [4, 6, 64].pick_random())
+			material.set_shader_parameter("shape_feather", 0.2)
+			material.set_shader_parameter("basic_feather", 0.1)
+			grid = [Vector2(8, 5), Vector2(12, 7), Vector2(6, 4)].pick_random()
+			bias = [Vector2(1, 0.5), Vector2(1, 0), Vector2(0, 1), Vector2(-1, 0.5)].pick_random()
+			# Cada peça usa progress - dot(célula, bias / 10): os limites cobrem a peça mais adiantada e a mais atrasada.
+			var low := minf(0.0, bias.x) * (grid.x - 1) / 10.0 + minf(0.0, bias.y) * (grid.y - 1) / 10.0
+			var high := maxf(0.0, bias.x) * (grid.x - 1) / 10.0 + maxf(0.0, bias.y) * (grid.y - 1) / 10.0
+			idle_progress = IDLE_PROGRESS + low
+			cover_progress = 1.6 + high
+	material.set_shader_parameter("invert", style != 2)
+	material.set_shader_parameter("grid_size", grid)
+	material.set_shader_parameter("progress_bias", bias)
+	material.set_shader_parameter("rotation_angle", randf_range(-25.0, 25.0) if style != 2 else 0.0)
+	material.set_shader_parameter("progress", idle_progress)

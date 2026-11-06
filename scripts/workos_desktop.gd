@@ -1,12 +1,15 @@
 extends Control
 
 signal exit_requested
+signal video_changed(world: String, crt: bool)
 
 const MUSIC_SCRIPT := preload("res://scripts/workos_music.gd")
 const GAME_SCRIPT := preload("res://scripts/workos/game_state.gd")
 const SOCIAL_SCRIPT := preload("res://scripts/workos/social_state.gd")
 const APPS := preload("res://scripts/workos/apps.gd")
 const SAVE_PATH := "user://workos.cfg"
+const WORLD_EFFECTS := ["off", "psx", "vhs", "psx_vhs"]
+const WORLD_EFFECT_NAMES := ["Desligado", "PSX", "VHS", "PSX + VHS"]
 const WALLPAPERS := ["cerejeira-luar", "deserto-por-do-sol", "espaco-terra", "farol-por-do-sol", "lago-primavera", "outono-dourado", "planeta-aneis", "praia-tropical"]
 const TITLES := {"workday": "PORTAL_RH.EXE", "calendar": "CALENDÁRIO", "archive": "ARQUIVO", "messenger": "MSWORKN.EXE", "profile": "PERFIL", "backup": "BACKUP", "notes": "NOTAS.TXT", "calc": "CALCULADORA", "settings": "CONFIGURAÇÕES", "about": "WORKOS", "music": "MÚSICA"}
 var music: Node
@@ -186,6 +189,20 @@ func _build_settings(parent: Control) -> void:
 	for wall in WALLPAPERS: options.add_item(wall.replace("-", " ").capitalize())
 	options.selected = maxi(0, WALLPAPERS.find(str(settings.get_value("desktop", "wallpaper", "lago-primavera"))))
 	options.item_selected.connect(func(index: int) -> void: _set_wallpaper(WALLPAPERS[index]))
+	var effect_label := Label.new()
+	effect_label.text = "Efeito de vídeo do mundo 3D"
+	parent.add_child(effect_label)
+	var effects := OptionButton.new()
+	for effect_name in WORLD_EFFECT_NAMES: effects.add_item(effect_name)
+	effects.selected = maxi(0, WORLD_EFFECTS.find(video_world()))
+	parent.add_child(effects)
+	var crt := CheckBox.new()
+	crt.text = "Tela CRT no monitor"
+	crt.button_pressed = video_crt()
+	parent.add_child(crt)
+	effects.item_selected.connect(func(index: int) -> void: _set_video(WORLD_EFFECTS[index], crt.button_pressed))
+	crt.toggled.connect(func(on: bool) -> void: _set_video(WORLD_EFFECTS[effects.selected], on))
+	for node in [effect_label, effects, crt]: parent.move_child(node, parent.get_node("Preview").get_index())
 	var preview: TextureRect = parent.get_node("Preview")
 	preview.texture = $Wallpaper.texture
 	options.item_selected.connect(func(_index: int) -> void: preview.texture = $Wallpaper.texture)
@@ -196,6 +213,18 @@ func _set_wallpaper(id: String, persist := true) -> void:
 	if persist:
 		settings.set_value("desktop", "wallpaper", id)
 		settings.save(SAVE_PATH)
+
+func video_world() -> String:
+	return str(settings.get_value("video", "world", "psx"))
+
+func video_crt() -> bool:
+	return bool(settings.get_value("video", "crt", true))
+
+func _set_video(world: String, crt: bool) -> void:
+	settings.set_value("video", "world", world)
+	settings.set_value("video", "crt", crt)
+	settings.save(SAVE_PATH)
+	video_changed.emit(world, crt)
 
 func dismiss_menu() -> bool:
 	if $StartMenu.visible:

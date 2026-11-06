@@ -1,6 +1,6 @@
 [gd_scene format=3]
 
-[ext_resource type="PackedScene" path="res://assets/models/bus stop/standard_bus_stop.glb" id="1_model"]
+[ext_resource type="PackedScene" path="res://assets/models/biblioteca/bus-stop/standard_bus_stop.glb" id="1_model"]
 
 [node name="PontoDeOnibus" type="Node3D"]
 

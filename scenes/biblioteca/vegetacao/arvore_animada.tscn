@@ -1,6 +1,6 @@
 [gd_scene format=3]
 
-[ext_resource type="PackedScene" path="res://assets/models/tree_animate.glb" id="1_model"]
+[ext_resource type="PackedScene" path="res://assets/models/biblioteca/tree-animate/tree_animate.glb" id="1_model"]
 
 [node name="ArvoreAnimada" type="Node3D"]
 

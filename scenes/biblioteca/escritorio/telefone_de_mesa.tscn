@@ -1,6 +1,6 @@
 [gd_scene format=3]
 
-[ext_resource type="PackedScene" path="res://assets/models/office_phone.glb" id="1_model"]
+[ext_resource type="PackedScene" path="res://assets/models/biblioteca/office-phone/office_phone.glb" id="1_model"]
 
 [node name="TelefoneDeMesa" type="Node3D"]
 

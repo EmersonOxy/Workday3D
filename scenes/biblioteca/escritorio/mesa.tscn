@@ -1,6 +1,6 @@
 [gd_scene format=3]
 
-[ext_resource type="PackedScene" path="res://assets/models/office_table.glb" id="1_model"]
+[ext_resource type="PackedScene" path="res://assets/models/biblioteca/office-table-player/office_table.glb" id="1_model"]
 
 [node name="Mesa" type="Node3D"]
 

@@ -5,6 +5,9 @@ const SCREEN_SIZE := Vector2(0.86, 0.48)
 const VIEWPORT_SIZE := Vector2i(1280, 720)
 const DESKTOP_SCREEN_FILL := 0.94
 const WORKER_SKIN := preload("res://assets/materials/worker_skin.tres")
+const PSX_SHADER := preload("res://assets/shaders/psx_screen.gdshader")
+const VHS_SHADER := preload("res://assets/shaders/vhs_screen.gdshader")
+const CRT_SHADER := preload("res://assets/shaders/crt_monitor.gdshader")
 @export_range(10.0, 85.0, 1.0) var horizontal_look_limit_degrees := 65.0
 @export_range(45.0, 100.0, 1.0) var seated_thigh_angle := 82.0:
 	set(value):
@@ -28,6 +31,12 @@ const WORKER_SKIN := preload("res://assets/materials/worker_skin.tres")
 @onready var desktop_viewport: SubViewport = $DesktopSubViewport
 @onready var desktop: Control = $DesktopSubViewport/WorkOSDesktop
 var desktop_buttons := 0
+var video_layers: Array[CanvasLayer] = []
+var pause_menu: CanvasLayer
+var effects_suppressed := false
+var video_world := "psx"
+var plain_screen_material: Material
+var crt_screen_material: ShaderMaterial
 var last_desktop_mouse := Vector2.ZERO
 var pre_zoom_camera_transform := Transform3D.IDENTITY
 var initial_yaw := 0.0
@@ -37,7 +46,7 @@ var yaw := 0.0
 var pitch := -0.14
 var is_zoomed := false
 var zoom_tween: Tween
-var crosshair: Label
+var crosshair: Panel
 var desktop_pointer_over_screen := false
 var last_pose_inputs: Array = []
 
@@ -65,6 +74,10 @@ func _ready() -> void:
 	_build_desktop()
 	player.configure(self)
 	travel.configure(self, player)
+	pause_menu = preload("res://scripts/ui/pause_menu.gd").new()
+	pause_menu.name = "PauseMenu"
+	add_child(pause_menu)
+	pause_menu.setup(self)
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 func _physics_process(_delta: float) -> void:
@@ -300,19 +313,33 @@ func _build_desktop() -> void:
 	screen_material.uv1_offset = Vector3(1.0, 0.0, 0.0)
 	screen_material.albedo_texture = desktop_viewport.get_texture()
 	monitor_screen.material_override = screen_material
+	plain_screen_material = screen_material
+	crt_screen_material = ShaderMaterial.new()
+	crt_screen_material.shader = CRT_SHADER
+	crt_screen_material.set_shader_parameter("screen_texture", desktop_viewport.get_texture())
+	_build_video_effects()
+	desktop.video_changed.connect(_apply_video)
+	_apply_video(desktop.video_world(), desktop.video_crt())
 
 	var hud := CanvasLayer.new()
 	hud.name = "AimHUD"
 	hud.layer = 5
 	add_child(hud)
-	crosshair = Label.new()
-	crosshair.text = "+"
-	crosshair.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
-	crosshair.position = Vector2(-7, -16)
+	# Mira: um ponto branco com contorno escuro fino, legível em fundo claro e escuro.
+	crosshair = Panel.new()
+	var dot := StyleBoxFlat.new()
+	dot.bg_color = Color(1, 1, 1, 0.9)
+	dot.border_color = Color(0, 0, 0, 0.55)
+	dot.set_border_width_all(1)
+	dot.set_corner_radius_all(4)
+	crosshair.add_theme_stylebox_override("panel", dot)
 	crosshair.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	crosshair.add_theme_font_size_override("font_size", 24)
-	crosshair.add_theme_color_override("font_color", Color.WHITE)
 	hud.add_child(crosshair)
+	crosshair.set_anchors_preset(Control.PRESET_CENTER)
+	crosshair.offset_left = -3
+	crosshair.offset_top = -3
+	crosshair.offset_right = 3
+	crosshair.offset_bottom = 3
 	var hint := Label.new()
 	hint.name = "InteractionHint"
 	hud.add_child(hint)
@@ -332,7 +359,12 @@ func _unhandled_input(event: InputEvent) -> void:
 		if is_zoomed:
 			if not desktop.dismiss_menu(): _set_zoomed(false)
 		else:
-			Input.mouse_mode = Input.MOUSE_MODE_VISIBLE if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED else Input.MOUSE_MODE_CAPTURED
+			pause_menu.open()
+		get_viewport().set_input_as_handled()
+		return
+	# Debug: H acelera o horário do céu e da iluminação fora do escritório (F8 é "parar projeto" no editor).
+	if OS.is_debug_build() and event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_H and not is_zoomed:
+		travel._message(travel.day_cycle.debug_toggle())
 		get_viewport().set_input_as_handled()
 		return
 	# Atalhos de debug (só em builds de debug): F6 avança 1 hora, F7 pula para as 18:00.
@@ -434,11 +466,38 @@ func _desktop_view_distance() -> float:
 	var fit_width := SCREEN_SIZE.x * screen_scale.x / (2.0 * half_height_tangent * aspect * DESKTOP_SCREEN_FILL)
 	return maxf(fit_height, fit_width)
 
+## Efeitos de vídeo: PSX e/ou VHS por cima do mundo 3D (escondidos com o monitor em foco, para o WorkOS
+## continuar legível) e CRT na própria tela do monitor. Ligados nas Configurações do WorkOS.
+func _build_video_effects() -> void:
+	for shader in [PSX_SHADER, VHS_SHADER]:
+		var layer := CanvasLayer.new()
+		# Abaixo das camadas de interface (mira, avisos, painéis), que continuam nítidas.
+		layer.layer = -10 + video_layers.size()
+		var rect := ColorRect.new()
+		rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		var material := ShaderMaterial.new()
+		material.shader = shader
+		rect.material = material
+		layer.add_child(rect)
+		add_child(layer)
+		video_layers.append(layer)
+
+func _apply_video(world: String, crt: bool) -> void:
+	video_world = world
+	video_layers[0].visible = world in ["psx", "psx_vhs"] and not effects_suppressed
+	video_layers[1].visible = world in ["vhs", "psx_vhs"] and not effects_suppressed
+	monitor_screen.material_override = crt_screen_material if crt else plain_screen_material
+
 func _set_zoomed(enabled: bool) -> void:
 	if enabled and not player.can_use_computer(): return
 	if is_zoomed == enabled:
 		return
 	is_zoomed = enabled
+	# Saindo do PC o efeito volta na hora; entrando, só some quando a câmera chega à tela.
+	if not enabled and not video_layers.is_empty():
+		effects_suppressed = false
+		_apply_video(video_world, desktop.video_crt())
 	camera.clear_mouse_sway()
 	desktop.set_monitor_focus(false)
 	var transition_duration: float = player.begin_typing() if enabled else player.end_typing()
@@ -477,6 +536,9 @@ func _set_zoomed(enabled: bool) -> void:
 	zoom_tween.tween_callback(func() -> void:
 		camera_pivot.global_transform = target_transform
 		is_transitioning = false
+		if enabled and not video_layers.is_empty():
+			effects_suppressed = true
+			_apply_video(video_world, desktop.video_crt())
 		desktop.set_monitor_focus(enabled))
 	if crosshair != null:
 		crosshair.visible = not enabled

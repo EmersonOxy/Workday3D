@@ -1,6 +1,20 @@
 [gd_scene format=3]
 
+[ext_resource type="PackedScene" path="res://assets/models/biblioteca/building-set/source/665206400ef045559f06cde0a46698ce.fbx.fbx" id="r_tijolos"]
+[ext_resource type="PackedScene" path="res://assets/models/biblioteca/buildings-for-background--buildings-pack/buildings_for_background__buildings_pack.glb" id="r_fachadas"]
+[ext_resource type="PackedScene" path="res://assets/models/biblioteca/office-building-2/predio.fbx" id="r_torre"]
+[ext_resource type="PackedScene" path="res://assets/models/biblioteca/oak-trees/source/oaktrees.fbx" id="r_carvalho"]
+[ext_resource type="PackedScene" path="res://assets/models/biblioteca/traffic-light/source/TrafficLight.fbx" id="r_semaforo"]
+[ext_resource type="Script" path="res://scripts/props/fitted_prop.gd" id="fit"]
+[ext_resource type="PackedScene" path="res://assets/models/biblioteca/street-light/street_light.glb" id="m_poste"]
 [ext_resource type="Script" path="res://scripts/world/interaction_zone.gd" id="1_zone"]
+
+[sub_resource type="PlaneMesh" id="ChaoEntorno"]
+size = Vector2(160, 160)
+
+[sub_resource type="StandardMaterial3D" id="ChaoEntornoMat"]
+albedo_color = Color(0.36, 0.37, 0.38, 1)
+roughness = 0.95
 
 [sub_resource type="BoxMesh" id="MESH0"]
 size = Vector3(18, 0.24, 18)
@@ -407,3 +421,149 @@ rotation_degrees = Vector3(0, 180, 0)
 [node name="FromHome" type="Marker3D" parent="Spawns"]
 position = Vector3(4, 0, -3.9)
 rotation_degrees = Vector3(0, 180, 0)
+
+[node name="Poste1" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.6, 0, -4.6)
+script = ExtResource("fit")
+model = ExtResource("m_poste")
+fit_by = 0
+size = 4.5
+solid = true
+
+[node name="LuzPoste1" type="OmniLight3D" parent="." groups=["luz_noturna"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.6, 4.1, -4.6)
+light_color = Color(1, 0.82, 0.55, 1)
+light_energy = 1.6
+omni_range = 10
+
+[node name="Poste2" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.6, 0, -4.6)
+script = ExtResource("fit")
+model = ExtResource("m_poste")
+fit_by = 0
+size = 4.5
+solid = true
+
+[node name="LuzPoste2" type="OmniLight3D" parent="." groups=["luz_noturna"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.6, 4.1, -4.6)
+light_color = Color(1, 0.82, 0.55, 1)
+light_energy = 1.6
+omni_range = 10
+
+[node name="Poste3" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.6, 0, 5.2)
+script = ExtResource("fit")
+model = ExtResource("m_poste")
+fit_by = 0
+size = 4.5
+solid = true
+
+[node name="LuzPoste3" type="OmniLight3D" parent="." groups=["luz_noturna"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.6, 4.1, 5.2)
+light_color = Color(1, 0.82, 0.55, 1)
+light_energy = 1.6
+omni_range = 10
+
+[node name="Poste4" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.6, 0, 5.2)
+script = ExtResource("fit")
+model = ExtResource("m_poste")
+fit_by = 0
+size = 4.5
+solid = true
+
+[node name="LuzPoste4" type="OmniLight3D" parent="." groups=["luz_noturna"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.6, 4.1, 5.2)
+light_color = Color(1, 0.82, 0.55, 1)
+light_energy = 1.6
+omni_range = 10
+
+[node name="Entorno" type="Node3D" parent="."]
+
+[node name="PrediosFundo" type="Node3D" parent="Entorno"]
+transform = Transform3D(6.12323e-17, 0, -1, 0, 1, 0, 1, 0, 6.12323e-17, 0, 0, -15.5)
+script = ExtResource("fit")
+model = ExtResource("r_tijolos")
+fit_by = 3
+size = 22.0
+
+[node name="FachadasEsquerda" type="Node3D" parent="Entorno"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, -12.0, 0, 0)
+script = ExtResource("fit")
+model = ExtResource("r_fachadas")
+fit_by = 3
+size = 20.0
+
+[node name="FachadasDireita" type="Node3D" parent="Entorno"]
+transform = Transform3D(-1, 0, -1.22465e-16, 0, 1, 0, 1.22465e-16, 0, -1, 12.0, 0, 0)
+script = ExtResource("fit")
+model = ExtResource("r_fachadas")
+fit_by = 3
+size = 20.0
+
+[node name="TorreEscura" type="Node3D" parent="Entorno"]
+transform = Transform3D(0.965926, 0, 0.258819, 0, 1, 0, -0.258819, 0, 0.965926, 16.0, 0, -26.0)
+script = ExtResource("fit")
+model = ExtResource("r_torre")
+fit_by = 0
+size = 26.0
+
+[node name="Arvore1" type="Node3D" parent="Entorno"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, -7.6, 0, -1.5)
+script = ExtResource("fit")
+model = ExtResource("r_carvalho")
+fit_by = 0
+size = 5.5
+solid = true
+
+[node name="Arvore2" type="Node3D" parent="Entorno"]
+transform = Transform3D(0.34202, 0, -0.939693, 0, 1, 0, 0.939693, 0, 0.34202, 7.6, 0, -1.5)
+script = ExtResource("fit")
+model = ExtResource("r_carvalho")
+fit_by = 0
+size = 5.5
+solid = true
+
+[node name="Arvore3" type="Node3D" parent="Entorno"]
+transform = Transform3D(-0.766044, 0, -0.642788, 0, 1, 0, 0.642788, 0, -0.766044, -7.6, 0, 2.0)
+script = ExtResource("fit")
+model = ExtResource("r_carvalho")
+fit_by = 0
+size = 5.5
+solid = true
+
+[node name="Arvore4" type="Node3D" parent="Entorno"]
+transform = Transform3D(-0.866025, 0, 0.5, 0, 1, 0, -0.5, 0, -0.866025, 7.6, 0, 2.0)
+script = ExtResource("fit")
+model = ExtResource("r_carvalho")
+fit_by = 0
+size = 5.5
+solid = true
+
+[node name="Semaforo1" type="Node3D" parent="Entorno"]
+transform = Transform3D(-1, 0, -1.22465e-16, 0, 1, 0, 1.22465e-16, 0, -1, 1.6, 0, -0.6)
+script = ExtResource("fit")
+model = ExtResource("r_semaforo")
+fit_by = 0
+size = 3.2
+solid = true
+
+[node name="Semaforo2" type="Node3D" parent="Entorno"]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, -3.2, 0, 3.0)
+script = ExtResource("fit")
+model = ExtResource("r_semaforo")
+fit_by = 0
+size = 3.2
+solid = true
+
+[node name="ChaoEntorno" type="MeshInstance3D" parent="Entorno"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.2, 0)
+mesh = SubResource("ChaoEntorno")
+material_override = SubResource("ChaoEntornoMat")
+
+[node name="PrediosAtras" type="Node3D" parent="Entorno"]
+transform = Transform3D(6.12323e-17, 0, 1, 0, 1, 0, -1, 0, 6.12323e-17, 0, 0, 15.5)
+script = ExtResource("fit")
+model = ExtResource("r_tijolos")
+fit_by = 3
+size = 22.0

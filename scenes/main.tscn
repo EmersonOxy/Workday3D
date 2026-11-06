@@ -1,11 +1,12 @@
 [gd_scene format=3 uid="uid://bv7dnyh0bxqg7"]
 
+[ext_resource type="PackedScene" path="res://scenes/office/office_layout.tscn" id="office_layout"]
 [ext_resource type="PackedScene" path="res://assets/models/biblioteca/wall-clock/clock.glb" id="m_wallclock"]
 [ext_resource type="Script" uid="uid://50npccyfxvrt" path="res://scripts/main.gd" id="1_main"]
-[ext_resource type="PackedScene" uid="uid://cx6ukce427hiy" path="res://assets/models/office_chair.glb" id="2_chair"]
-[ext_resource type="PackedScene" uid="uid://blnp50a8rqure" path="res://assets/models/office_table.glb" id="3_table"]
+[ext_resource type="PackedScene" uid="uid://cx6ukce427hiy" path="res://assets/models/biblioteca/office-chair-player/office_chair.glb" id="2_chair"]
+[ext_resource type="PackedScene" uid="uid://blnp50a8rqure" path="res://assets/models/biblioteca/office-table-player/office_table.glb" id="3_table"]
 [ext_resource type="Texture2D" uid="uid://ccsaardyd70m2" path="res://assets/workday/cats/laranja.png" id="5_jkv2x"]
-[ext_resource type="PackedScene" uid="uid://b5yaa8bdt0k3f" path="res://assets/models/the_character_of_an_office_worker.glb" id="5_worker"]
+[ext_resource type="PackedScene" uid="uid://b5yaa8bdt0k3f" path="res://assets/models/biblioteca/office-worker/the_character_of_an_office_worker.glb" id="5_worker"]
 [ext_resource type="PackedScene" uid="uid://bchbw0joji7h4" path="res://scenes/workos_desktop.tscn" id="7_workos"]
 [ext_resource type="Script" uid="uid://dtnltkwfv5w1n" path="res://scripts/anchored_targets.gd" id="anchor_targets"]
 [ext_resource type="Script" uid="uid://c1ikpj0eb2e5v" path="res://scripts/first_person_camera.gd" id="camera_controls"]
@@ -87,7 +88,6 @@ environment = SubResource("RoomEnvironment")
 [node name="KeyLight" type="DirectionalLight3D" parent="." unique_id=1042569329]
 transform = Transform3D(0.88294756, 0.3488854, -0.3141378, 0, 0.66913056, 0.74314487, 0.46947157, -0.656158, 0.5908072, 0, 0, 0)
 light_energy = 1.2
-shadow_enabled = true
 
 [node name="Room" type="Node3D" parent="." unique_id=2121896487]
 
@@ -588,4 +588,6 @@ gizmo_extents = 0.08
 script = ExtResource("world_travel")
 
 [node name="WallClock" parent="." instance=ExtResource("m_wallclock")]
-transform = Transform3D(0.06, 0, -0, 0, 3.67394e-18, 0.06, 0, -0.06, 3.67394e-18, -3, 2.35, -5.85)
+transform = Transform3D(-0.06, -0, 0, 0, 3.67394e-18, 0.06, -0, 0.06, -3.67394e-18, -3, 2.35, -5.85)
+
+[node name="OfficeLayout" parent="." instance=ExtResource("office_layout")]

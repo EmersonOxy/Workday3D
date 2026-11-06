@@ -1,6 +1,6 @@
 [gd_scene format=3]
 
-[ext_resource type="PackedScene" path="res://assets/models/office_supplies_pack.glb" id="1_model"]
+[ext_resource type="PackedScene" path="res://assets/models/biblioteca/office-supplies-pack/office_supplies_pack.glb" id="1_model"]
 
 [node name="KitMaterialDeEscritorio" type="Node3D"]
 

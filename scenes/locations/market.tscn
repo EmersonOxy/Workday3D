@@ -1,10 +1,22 @@
 [gd_scene format=3]
 
+[ext_resource type="Script" path="res://scripts/props/fitted_prop.gd" id="fit"]
+[ext_resource type="PackedScene" path="res://assets/models/biblioteca/ceiling-light/ceiling_light.glb" id="k_luz"]
 [ext_resource type="PackedScene" path="res://assets/models/biblioteca/cash-counter-checkout/source/Counter.fbx" id="m_counter"]
 [ext_resource type="PackedScene" path="res://assets/models/biblioteca/hundred-dolar/source/Hundred_Dolar.glb" id="m_note"]
 [ext_resource type="PackedScene" path="res://assets/models/biblioteca/komi-san-vending-machine/source/Komi.fbx" id="m_vending"]
 [ext_resource type="PackedScene" path="res://assets/models/biblioteca/plastic-basket/source/Basket.fbx" id="m_basket"]
 [ext_resource type="Script" path="res://scripts/world/interaction_zone.gd" id="1_zone"]
+
+[sub_resource type="BoxMesh" id="TetoMesh"]
+size = Vector3(12.2, 0.12, 14.2)
+
+[sub_resource type="StandardMaterial3D" id="TetoMat"]
+albedo_color = Color(0.92, 0.93, 0.95, 1)
+roughness = 0.95
+
+[sub_resource type="BoxShape3D" id="TetoShape"]
+size = Vector3(12.2, 0.12, 14.2)
 
 [sub_resource type="BoxMesh" id="MESH0"]
 size = Vector3(12, 0.24, 14)
@@ -347,3 +359,66 @@ transform = Transform3D(0.3, 0, -0, 0, 0.3, 0, 0, -0, 0.3, -1.6, 0, 5.6)
 
 [node name="Cesto2" parent="." instance=ExtResource("m_basket")]
 transform = Transform3D(0.3, 0, -0, 0, 0.3, 0, 0, -0, 0.3, -1.6, 0.16, 5.6)
+
+[node name="LuzLoja1" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 3.0, -1.0)
+light_color = Color(0.95, 0.98, 1, 1)
+light_energy = 0.9
+omni_range = 8.0
+
+[node name="LuzLoja2" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 3.0, 3.0)
+light_color = Color(0.95, 0.98, 1, 1)
+light_energy = 0.9
+omni_range = 8.0
+
+[node name="Teto" type="StaticBody3D" parent="."]
+position = Vector3(0, 3.46, 0)
+
+[node name="Visual" type="MeshInstance3D" parent="Teto"]
+mesh = SubResource("TetoMesh")
+material_override = SubResource("TetoMat")
+
+[node name="Collision" type="CollisionShape3D" parent="Teto"]
+shape = SubResource("TetoShape")
+
+[node name="LuminariaLoja1" type="Node3D" parent="."]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, -2.5, 3.38, -4.0)
+script = ExtResource("fit")
+model = ExtResource("k_luz")
+fit_by = 1
+size = 0.7
+
+[node name="LuminariaLoja2" type="Node3D" parent="."]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 2.5, 3.38, -4.0)
+script = ExtResource("fit")
+model = ExtResource("k_luz")
+fit_by = 1
+size = 0.7
+
+[node name="LuminariaLoja3" type="Node3D" parent="."]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, -2.5, 3.38, 1.5)
+script = ExtResource("fit")
+model = ExtResource("k_luz")
+fit_by = 1
+size = 0.7
+
+[node name="LuminariaLoja4" type="Node3D" parent="."]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 2.5, 3.38, 1.5)
+script = ExtResource("fit")
+model = ExtResource("k_luz")
+fit_by = 1
+size = 0.7
+
+[node name="LuminariaLoja5" type="Node3D" parent="."]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 0.0, 3.38, 4.8)
+script = ExtResource("fit")
+model = ExtResource("k_luz")
+fit_by = 1
+size = 0.7
+
+[node name="LuzLoja3" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 0.0, 3.0, 4.8)
+light_color = Color(0.95, 0.98, 1, 1)
+light_energy = 0.8
+omni_range = 7.0

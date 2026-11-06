@@ -13,7 +13,7 @@ func child_bone(sk: Skeleton3D, index: int) -> int:
 		return child
 	return -1
 func bake() -> void:
-	var target := load("res://assets/models/the_character_of_an_office_worker.glb").instantiate() as Node3D
+	var target := load("res://assets/models/biblioteca/office-worker/the_character_of_an_office_worker.glb").instantiate() as Node3D
 	root.add_child(target)
 	var rig: Skeleton3D = target.find_children("*", "Skeleton3D", true, false)[0]
 	var target_names := {}
