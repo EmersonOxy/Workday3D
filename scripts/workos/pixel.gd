@@ -80,7 +80,8 @@ static func app_icon(app: String, scale := 3) -> Texture2D:
 		"shop": return texture(icons.shop, scale)
 		"messenger": return texture(icons.msn, scale)
 		"profile": return menu_icon("prof", scale)
-		"backup": return menu_icon("cfg", scale)
+		"backup": return sprite("box", scale)
+		"config": return menu_icon("cfg", scale)
 		"about": return menu_icon("how", scale)
 	return menu_icon("app", scale)
 

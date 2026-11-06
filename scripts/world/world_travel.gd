@@ -290,6 +290,8 @@ func _do_travel(zone: Area3D, destination: String, spawn_name: String) -> void:
 	if destination != "market": market_panel.clear_cart()
 	day_cycle.apply(destination, current_scene)
 	location = destination
+	var desktop: Control = host.desktop
+	if desktop.powered: desktop.music.set_listening("room" if location == "office" else "away")
 	await get_tree().physics_frame
 	await _fade(0.0, 0.32)
 	player.set_physics_process(true)

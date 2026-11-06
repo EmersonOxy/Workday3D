@@ -25,10 +25,50 @@ func configure(config: ConfigFile, path: String) -> void:
 	for index in TRACKS.size():
 		enabled[index] = bool(config.get_value("music", TRACKS[index][0], true))
 	player = AudioStreamPlayer.new()
+	player.bus = _music_bus()
 	add_child(player)
 	player.volume_db = linear_to_db(maxf(volume, 0.0001))
 	player.finished.connect(skip)
 	if sound_on: skip()
+
+## Barramento "Música" com filtro passa-baixa e eco: a música do WorkOS sai das caixinhas do PC.
+## "pc" = jogador no computador (som limpo); "room" = na sala (abafado, mais baixo, com eco);
+## "away" = fora do escritório (some); "off" = PC desligado.
+const BUS := "Musica"
+var listening := "pc"
+var _filter: AudioEffectLowPassFilter
+var _reverb: AudioEffectReverb
+
+func _music_bus() -> String:
+	if AudioServer.get_bus_index(BUS) < 0:
+		AudioServer.add_bus()
+		var index := AudioServer.bus_count - 1
+		AudioServer.set_bus_name(index, BUS)
+		AudioServer.set_bus_send(index, "Master")
+		_filter = AudioEffectLowPassFilter.new()
+		_filter.cutoff_hz = 20000.0
+		AudioServer.add_bus_effect(index, _filter)
+		_reverb = AudioEffectReverb.new()
+		_reverb.room_size = 0.55
+		_reverb.damping = 0.6
+		_reverb.wet = 0.0
+		_reverb.dry = 1.0
+		AudioServer.add_bus_effect(index, _reverb)
+	else:
+		var index := AudioServer.get_bus_index(BUS)
+		_filter = AudioServer.get_bus_effect(index, 0)
+		_reverb = AudioServer.get_bus_effect(index, 1)
+	return BUS
+
+func set_listening(mode: String) -> void:
+	if mode == listening: return
+	listening = mode
+	var targets: Array = {"pc": [20000.0, 0.0, 0.0], "room": [900.0, 0.28, -9.0], "away": [400.0, 0.4, -60.0], "off": [400.0, 0.0, -60.0]}[mode]
+	var index := AudioServer.get_bus_index(BUS)
+	var tween := create_tween().set_parallel(true)
+	tween.tween_method(func(hz: float) -> void: _filter.cutoff_hz = hz, _filter.cutoff_hz, targets[0], 0.6)
+	tween.tween_method(func(wet: float) -> void: _reverb.wet = wet, _reverb.wet, targets[1], 0.6)
+	tween.tween_method(func(db: float) -> void: AudioServer.set_bus_volume_db(index, db), AudioServer.get_bus_volume_db(index), targets[2], 0.6)
 
 func set_sound(value: bool) -> void:
 	sound_on = value

@@ -14,6 +14,7 @@ const EFFECTS_SCRIPT := preload("res://scripts/workos/effects.gd")
 const WINDOW_SCRIPT := preload("res://scripts/workos/os_window.gd")
 const APPS := preload("res://scripts/workos/apps.gd")
 const MSN_APP := preload("res://scripts/workos/msn_app.gd")
+const OS_APPS := preload("res://scripts/workos/os_apps.gd")
 const PIXEL := preload("res://scripts/workos/pixel.gd")
 const STYLE := preload("res://scripts/workos/os_style.gd")
 const SAVE_PATH := "user://workos.cfg"
@@ -33,12 +34,14 @@ const APP_INFO := {
 	"archive": ["ARQUIVO.EXE", "Arquivo"],
 	"messenger": ["MSWORKN.EXE", "MSWORKN.EXE"],
 	"backup": ["BACKUP.EXE", "Backup"],
+	"config": ["CONFIGURACOES.EXE", "Configurações"],
+	"shop": ["CATALOGO.EXE", "Catálogo"],
 	"about": ["SOBRE.TXT", "Sobre o WorkOS"],
 }
-const DESKTOP_ICONS := ["workday", "calendar", "calc", "notes", "music", "settings", "profile", "archive", "messenger"]
-const WINDOW_SIZES := {"workday": Vector2(1080, 620), "calendar": Vector2(900, 600), "archive": Vector2(900, 600), "messenger": Vector2(900, 600),
-	"music": Vector2(640, 540), "calc": Vector2(380, 520), "notes": Vector2(620, 480), "settings": Vector2(620, 560), "profile": Vector2(640, 560),
-	"backup": Vector2(620, 460), "about": Vector2(560, 420)}
+const DESKTOP_ICONS := ["workday", "calendar", "calc", "notes", "music", "settings", "profile", "archive", "shop", "messenger"]
+const WINDOW_SIZES := {"workday": Vector2(1080, 620), "calendar": Vector2(1040, 620), "archive": Vector2(900, 600), "messenger": Vector2(900, 600),
+	"music": Vector2(640, 540), "calc": Vector2(380, 520), "notes": Vector2(620, 480), "settings": Vector2(620, 560), "profile": Vector2(820, 600),
+	"backup": Vector2(620, 460), "about": Vector2(560, 420), "config": Vector2(720, 560), "shop": Vector2(880, 600)}
 
 var music: Node
 var game: Node
@@ -61,6 +64,10 @@ var start_button: TextureButton
 var start_menu: Control
 var clock_label: Label
 var toast_layer: VBoxContainer
+var power_layer: ColorRect
+var powered := true
+var booting := false
+var _open_before_shutdown: Array = []
 
 func _ready() -> void:
 	theme = STYLE.theme()
@@ -75,6 +82,9 @@ func _ready() -> void:
 	music = MUSIC_SCRIPT.new()
 	add_child(music)
 	music.configure(settings, SAVE_PATH)
+	fx.sound_enabled = bool(settings.get_value("workos", "sfx", true))
+	fx.volume = float(settings.get_value("workos", "sfx_volume", 0.35))
+	fx.reduced_motion = bool(settings.get_value("workos", "reduced_motion", false))
 	for child in get_children():
 		if child is CanvasItem and not child in [game, social, fx, music]: child.queue_free()
 	_build_wallpaper()
@@ -88,6 +98,7 @@ func _ready() -> void:
 	_build_toasts()
 	_build_taskbar()
 	_build_start_menu()
+	_build_power_layer()
 	_set_wallpaper(str(settings.get_value("desktop", "wallpaper", "xadrez-workos")), false)
 	game.notice.connect(func(message: String) -> void: toast("WorkOS", message))
 	social.incoming.connect(func(npc: String, message: String) -> void:
@@ -359,11 +370,11 @@ func _build_start_menu() -> void:
 	column.add_child(body)
 	var programs := _menu_column(STYLE.PAPER, 250)
 	body.add_child(programs.get_parent())
-	for id in ["workday", "messenger", "calendar", "archive", "notes", "calc", "music"]:
+	for id in ["workday", "messenger", "calendar", "archive", "shop", "notes", "calc", "music"]:
 		_menu_item(programs, APP_INFO[id][1] if id != "workday" else "Portal RH", PIXEL.app_icon(id, 2), open_app.bind(id))
 	var places := _menu_column(Color("dfe6f3"), 210)
 	body.add_child(places.get_parent())
-	for item in [["profile", "Perfil"], ["settings", "Personalizar"], ["backup", "Backup"], ["about", "Sobre o WorkOS"]]:
+	for item in [["profile", "Perfil"], ["config", "Configurações"], ["settings", "Personalizar"], ["backup", "Backup"], ["about", "Sobre o WorkOS"]]:
 		_menu_item(places, item[1], PIXEL.app_icon(item[0], 2), open_app.bind(item[0]))
 	# Rodapé com "Desligar" (sai do computador).
 	var footer := PanelContainer.new()
@@ -387,8 +398,7 @@ func _build_start_menu() -> void:
 	off.add_theme_color_override("font_hover_color", STYLE.PAPER)
 	off.pressed.connect(func() -> void:
 		_close_start_menu()
-		fx.sound("close")
-		exit_requested.emit())
+		shutdown())
 	footer_row.add_child(off)
 
 func _menu_column(color: Color, width: float) -> VBoxContainer:
@@ -437,6 +447,118 @@ func _toggle_start_menu() -> void:
 	start_menu.scale = Vector2(1, 0.1)
 	var tween := create_tween()
 	tween.tween_method(func(t: float) -> void: start_menu.scale = Vector2(1, maxf(0.1, floorf(t * 6) / 6.0)), 0.0, 1.0, 0.14)
+
+# ---------------------------------------------------------------- Ligar e desligar
+
+func _build_power_layer() -> void:
+	power_layer = ColorRect.new()
+	power_layer.name = "Power"
+	power_layer.color = Color.BLACK
+	power_layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	power_layer.mouse_filter = Control.MOUSE_FILTER_STOP
+	power_layer.visible = false
+	add_child(power_layer)
+
+func _power_clear() -> void:
+	for child in power_layer.get_children(): child.queue_free()
+
+func _power_label(text: String, size: int, color: Color, y: float) -> Label:
+	var item := Label.new()
+	item.text = text
+	item.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	item.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
+	item.offset_left = -400
+	item.offset_right = 400
+	item.offset_top = y
+	item.add_theme_font_size_override("font_size", size)
+	item.add_theme_color_override("font_color", color)
+	power_layer.add_child(item)
+	return item
+
+## Desligar (osShutdown): tela verde-petróleo "Desligando…", depois a imagem recolhe numa linha clara que some,
+## como um CRT. O PC fica apagado (música muda, expediente pausado) até alguém clicar no monitor de novo.
+func shutdown() -> void:
+	if not powered or booting: return
+	powered = false
+	game.paused = true
+	game.save_game()
+	_save_notes()
+	fx.sound("shutdown")
+	music.set_listening("off")
+	_power_clear()
+	power_layer.color = Color("1f4a52")
+	power_layer.show()
+	move_child(power_layer, -1)
+	_power_label("Desligando…", 44, STYLE.PAPER, 320)
+	await get_tree().create_timer(0.9).timeout
+	_power_clear()
+	power_layer.color = STYLE.INK
+	var line := ColorRect.new()
+	line.color = Color("c3d5ff")
+	line.set_anchors_and_offsets_preset(Control.PRESET_HCENTER_WIDE)
+	line.offset_top = -1
+	line.offset_bottom = 1
+	power_layer.add_child(line)
+	var tween := create_tween()
+	tween.tween_method(func(t: float) -> void:
+		if not is_instance_valid(line): return
+		var s := floorf(t * 5) / 5.0
+		line.offset_left = size.x / 2.0 * s
+		line.offset_right = -size.x / 2.0 * s
+		line.modulate.a = 1.0 - s, 0.0, 1.0, 0.5)
+	await tween.finished
+	_power_clear()
+	power_layer.color = Color.BLACK
+	_open_before_shutdown = windows.keys().filter(func(id: String) -> bool: return windows[id].visible)
+	for id in windows.keys(): windows[id].hide()
+	exit_requested.emit()
+
+## Ligar: tela preta, orbe do WorkOS no centro, nome e barra de carregamento em blocos; depois a área de trabalho.
+func power_on() -> void:
+	if powered or booting: return
+	booting = true
+	_power_clear()
+	power_layer.color = Color.BLACK
+	power_layer.show()
+	move_child(power_layer, -1)
+	fx.sound("boot")
+	await get_tree().create_timer(0.4).timeout
+	power_layer.color = Color("1f4a52")
+	var orb := TextureRect.new()
+	orb.texture = PIXEL.orb(6)
+	orb.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	orb.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+	orb.offset_left = -66
+	orb.offset_right = 66
+	orb.offset_top = -170
+	orb.offset_bottom = -38
+	power_layer.add_child(orb)
+	_power_label("WorkOS", 48, STYLE.PAPER, 420)
+	var bar := HBoxContainer.new()
+	bar.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
+	bar.offset_left = -110
+	bar.offset_top = 490
+	bar.add_theme_constant_override("separation", 4)
+	power_layer.add_child(bar)
+	var blocks: Array = []
+	for index in 10:
+		var block := ColorRect.new()
+		block.custom_minimum_size = Vector2(18, 18)
+		block.color = Color(STYLE.PAPER, 0.15)
+		bar.add_child(block)
+		blocks.append(block)
+	for index in blocks.size():
+		await get_tree().create_timer(0.12).timeout
+		blocks[index].color = Color("7ed98c")
+	await get_tree().create_timer(0.25).timeout
+	power_layer.hide()
+	_power_clear()
+	powered = true
+	booting = false
+	for id in _open_before_shutdown:
+		if windows.has(id): windows[id].show()
+	music.set_listening("pc")
+	fx.sound("start")
 
 func _close_start_menu() -> void:
 	if start_menu != null: start_menu.hide()
@@ -526,16 +648,21 @@ func open_app(id: String) -> void:
 		# O MSworkN ocupa a janela inteira, sem a margem do papel (.os-win.msn-win .mw-in { padding: 0 }).
 		app = MSN_APP.new()
 		window.paper.add_theme_stylebox_override("panel", STYLE.flat(STYLE.PAPER, Color.TRANSPARENT, 0, 0))
+	elif id in ["calendar", "profile", "archive", "config", "shop"]:
+		app = VBoxContainer.new()
+		app.add_theme_constant_override("separation", 10)
 	else:
 		app = load("res://scenes/workos/apps/%s.tscn" % id).instantiate()
 	app.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	window.content.add_child(app)
 	match id:
 		"workday": app.setup(game, self)
-		"calendar": APPS.calendar(app, game)
-		"archive": APPS.archive(app, game)
+		"calendar": OS_APPS.calendar(app, game)
+		"archive": OS_APPS.archive(app, game)
+		"config": OS_APPS.settings(app, self)
+		"shop": OS_APPS.catalog(app, game)
 		"messenger": app.setup(social)
-		"profile": APPS.profile(app, game)
+		"profile": OS_APPS.profile(app, game, func() -> void: toast("WorkOS", "Crachá atualizado."))
 		"backup": APPS.backup(app, game)
 		"notes": _build_notes(app)
 		"calc": _build_calculator(app)

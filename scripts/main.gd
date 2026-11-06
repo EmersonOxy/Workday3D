@@ -319,6 +319,7 @@ func _build_desktop() -> void:
 	crt_screen_material.set_shader_parameter("screen_texture", desktop_viewport.get_texture())
 	_build_video_effects()
 	desktop.video_changed.connect(_apply_video)
+	desktop.music.set_listening("room")
 	_apply_video(desktop.video_world(), desktop.video_crt())
 
 	var hud := CanvasLayer.new()
@@ -491,6 +492,8 @@ func _apply_video(world: String, crt: bool) -> void:
 
 func _set_zoomed(enabled: bool) -> void:
 	if enabled and not player.can_use_computer(): return
+	if desktop.powered: desktop.music.set_listening("pc" if enabled else "room")
+	elif enabled: desktop.power_on()
 	if is_zoomed == enabled:
 		return
 	is_zoomed = enabled

@@ -119,7 +119,10 @@ static func theme() -> Theme:
 	for type in ["Button", "OptionButton", "MenuButton"]:
 		t.set_stylebox("normal", type, button)
 		t.set_stylebox("hover", type, tinted(button, Color(1.08, 1.06, 1.0)))
-		t.set_stylebox("pressed", type, tinted(button, Color(0.86, 0.84, 0.82)))
+		var pressed := tinted(button, Color(0.86, 0.84, 0.82))
+		pressed.content_margin_top += 2
+		pressed.content_margin_bottom -= 2
+		t.set_stylebox("pressed", type, pressed)
 		t.set_stylebox("disabled", type, tinted(button, Color(0.9, 0.9, 0.9, 0.6)))
 		t.set_stylebox("focus", type, StyleBoxEmpty.new())
 		for key in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color", "font_hover_pressed_color"]:

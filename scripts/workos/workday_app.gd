@@ -194,7 +194,7 @@ func _render_portal() -> void:
 	how.pressed.connect(_render_how)
 	buttons.append(how)
 	var settings := _menu_button(ui_text("settings", "Configurações"), "cfg", menu)
-	settings.pressed.connect(func() -> void: desktop.open_app("settings"))
+	settings.pressed.connect(func() -> void: desktop.open_app("config"))
 	buttons.append(settings)
 	var profile := _menu_button(ui_text("profile", "Perfil"), "prof", menu)
 	profile.pressed.connect(func() -> void: desktop.open_app("profile"))
